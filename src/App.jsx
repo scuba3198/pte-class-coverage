@@ -554,6 +554,40 @@ function App() {
             </p>
           </div>
 
+          <div className="card help-card">
+            <div className="card-header">
+              <div>
+                <p className="section-label">Help</p>
+                <h2>How to use this tracker</h2>
+                <p className="card-subtitle">A quick guide for smooth day-to-day tracking.</p>
+              </div>
+            </div>
+            <div className="help-list">
+              <p>
+                1. Choose a class at the top, then pick a module tab (Speaking, Writing, Reading,
+                Listening).
+              </p>
+              <p>
+                2. The coverage grid only shows the highest-impact tasks that reach 72+ marks for
+                that module.
+              </p>
+              <p>
+                3. Tap a pill to mark it Covered. The label shows how many marks that task carries
+                for the current module.
+              </p>
+              <p>
+                4. Use the session log to record what you taught today. The list matches the
+                coverage grid.
+              </p>
+              <p>
+                5. Cross-module tasks show a badge like (S/W/R/L) to indicate the original section.
+              </p>
+              <p>
+                6. Export a backup regularly if you might clear browser data or switch devices.
+              </p>
+            </div>
+          </div>
+
           <div className="card weightage-card">
             <div className="card-header">
               <div>

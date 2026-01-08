@@ -455,6 +455,18 @@
   font-size: 0.85rem;
 }
 
+.help-list {
+  display: grid;
+  gap: 10px;
+  color: var(--ink-600);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.help-list p {
+  margin: 0;
+}
+
 .weightage-card {
   column-span: all;
 }
