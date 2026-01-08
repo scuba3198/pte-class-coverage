@@ -1,5 +1,6 @@
 ﻿import './App.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import kiecLogo from './assets/kiec-logo.png';
 import {
   buildDefaultState,
   classDefaults,
@@ -279,7 +280,7 @@ function App() {
       <header className="app-header">
         <div className="brand">
           <div className="brand-mark">
-            <img src="/kiec-logo.png" alt="KIEC trademark logo" />
+            <img src={kiecLogo} alt="KIEC trademark logo" />
           </div>
           <div>
             <p className="brand-overline">
