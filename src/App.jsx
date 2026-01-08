@@ -349,7 +349,7 @@ function App() {
                 <p className="section-label">Overall coverage</p>
                 <h2>{activeClass.name}</h2>
                 <p className="card-subtitle">
-                  {coverageCounts.covered} of {coverageCounts.total} question types covered (Top 72 marks)
+                  {coverageCounts.covered} of {coverageCounts.total} question types covered (72+ marks)
                 </p>
               </div>
               <div className="progress-ring">
