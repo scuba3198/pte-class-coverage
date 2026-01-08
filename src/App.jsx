@@ -278,7 +278,9 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="brand">
-          <div className="brand-mark">K</div>
+          <div className="brand-mark">
+            <img src="/kiec-logo.png" alt="KIEC trademark logo" />
+          </div>
           <div>
             <p className="brand-overline">
               KIEC PTE Tracker <span className="brand-signature">by Mumukshu D.C</span>
