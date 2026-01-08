@@ -402,11 +402,11 @@ const getTopEntriesForSkillTarget = (skill, target = 72) => {
   let runningTotal = 0;
 
   for (const entry of entries) {
+    result.push(entry);
+    runningTotal += entry.scores[skill];
     if (runningTotal >= target) {
       break;
     }
-    result.push(entry);
-    runningTotal += entry.scores[skill];
   }
 
   return result;
