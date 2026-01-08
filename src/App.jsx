@@ -8,6 +8,7 @@ import {
   getQuestionTypeById,
   modules,
   normalizeState,
+  weightageChart,
 } from './state';
 
 const STORAGE_KEY = 'pte-tracker-state-v1';
@@ -229,6 +230,20 @@ function App() {
   const sortedSessions = useMemo(() => {
     return [...sessionsForClass].sort((a, b) => b.date.localeCompare(a.date));
   }, [sessionsForClass]);
+
+  const weightageTotals = useMemo(() => {
+    return weightageChart.reduce(
+      (acc, entry) => {
+        acc.listening += entry.scores.listening || 0;
+        acc.speaking += entry.scores.speaking || 0;
+        acc.reading += entry.scores.reading || 0;
+        acc.writing += entry.scores.writing || 0;
+        acc.total += entry.total || 0;
+        return acc;
+      },
+      { listening: 0, speaking: 0, reading: 0, writing: 0, total: 0 }
+    );
+  }, []);
 
   return (
     <div className="app">
@@ -478,6 +493,67 @@ function App() {
             <p className="backup-note">
               Data is stored locally in this browser. Export a backup if you plan to clear browser
               storage.
+            </p>
+          </div>
+
+          <div className="card weightage-card">
+            <div className="card-header">
+              <div>
+                <p className="section-label">Score weightage</p>
+                <h2>Marks by question type</h2>
+                <p className="card-subtitle">
+                  Based on the New Score Weightage Chart (PTE Academic / UKVI).
+                </p>
+              </div>
+            </div>
+            <div className="weightage-table">
+              <div className="weightage-row weightage-head">
+                <span>Question type</span>
+                <span>Avg Qs</span>
+                <span>Listening</span>
+                <span>Speaking</span>
+                <span>Reading</span>
+                <span>Writing</span>
+                <span>Total</span>
+              </div>
+              {weightageChart.map((entry) => (
+                <div key={`${entry.question}-${entry.module}`} className="weightage-row">
+                  <div>
+                    <p className="weightage-question">{entry.question}</p>
+                    <p className="weightage-module">{entry.module}</p>
+                  </div>
+                  <span data-label="Avg Qs">{entry.avgQs}</span>
+                  <span data-label="Listening">
+                    {entry.scores.listening ? entry.scores.listening.toFixed(2) : '—'}
+                  </span>
+                  <span data-label="Speaking">
+                    {entry.scores.speaking ? entry.scores.speaking.toFixed(2) : '—'}
+                  </span>
+                  <span data-label="Reading">
+                    {entry.scores.reading ? entry.scores.reading.toFixed(2) : '—'}
+                  </span>
+                  <span data-label="Writing">
+                    {entry.scores.writing ? entry.scores.writing.toFixed(2) : '—'}
+                  </span>
+                  <span className="weightage-total" data-label="Total">
+                    {entry.total.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+              <div className="weightage-row weightage-foot">
+                <span>Totals</span>
+                <span data-label="Avg Qs">—</span>
+                <span data-label="Listening">{weightageTotals.listening.toFixed(2)}</span>
+                <span data-label="Speaking">{weightageTotals.speaking.toFixed(2)}</span>
+                <span data-label="Reading">{weightageTotals.reading.toFixed(2)}</span>
+                <span data-label="Writing">{weightageTotals.writing.toFixed(2)}</span>
+                <span className="weightage-total" data-label="Total">
+                  {weightageTotals.total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <p className="backup-note">
+              Source: New Score Weightage Chart in the AlfaPTE guide (Aug 7, 2025 update).
             </p>
           </div>
         </section>
