@@ -508,6 +508,84 @@
   min-width: 720px;
 }
 
+.weightage-cards {
+  display: none;
+  margin-top: 16px;
+  gap: 12px;
+}
+
+.weightage-entry-card {
+  border: 1px solid rgba(60, 60, 60, 0.16);
+  border-left: 4px solid rgba(60, 60, 60, 0.16);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  gap: 12px;
+}
+
+.weightage-entry-card.weightage-speaking {
+  border-left-color: #c88543;
+  background: #fff6ec;
+}
+
+.weightage-entry-card.weightage-writing {
+  border-left-color: #6c7bb8;
+  background: #f3f6ff;
+}
+
+.weightage-entry-card.weightage-reading {
+  border-left-color: #6ea95b;
+  background: #f6fff1;
+}
+
+.weightage-entry-card.weightage-listening {
+  border-left-color: #c06a76;
+  background: #fff2f5;
+}
+
+.weightage-entry-card.weightage-total-card {
+  border-left-color: var(--ink-900);
+  background: #f3f0f6;
+}
+
+.weightage-card-header {
+  display: grid;
+  gap: 4px;
+}
+
+.weightage-card-module {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+  font-weight: 700;
+}
+
+.weightage-card-question {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.weightage-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.weightage-card-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-500);
+}
+
+.weightage-card-value {
+  display: block;
+  font-weight: 700;
+  color: var(--ink-800);
+}
+
 .weightage-table thead th {
   background: #f4f0ed;
   font-size: 0.75rem;
@@ -571,6 +649,14 @@
 @media (max-width: 900px) {
   .weightage-table {
     font-size: 0.85rem;
+  }
+
+  .weightage-table-wrap {
+    display: none;
+  }
+
+  .weightage-cards {
+    display: grid;
   }
 }
 .primary-button,

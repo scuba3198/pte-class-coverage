@@ -671,12 +671,12 @@ function App() {
                 </p>
               </div>
             </div>
-            <div className="weightage-table-wrap">
-              <table className="weightage-table">
-                <thead>
-                  <tr>
-                    <th>Module</th>
-                    <th>Weightage-wise Sequence of Questions</th>
+          <div className="weightage-table-wrap">
+            <table className="weightage-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Weightage-wise Sequence of Questions</th>
                     <th>Avg Qs</th>
                     <th>Listening</th>
                     <th>Speaking</th>
@@ -713,6 +713,81 @@ function App() {
                   </tr>
                 </tfoot>
               </table>
+            </div>
+            <div className="weightage-cards">
+              {weightageChart.map((entry) => (
+                <div
+                  key={`${entry.question}-${entry.module}-card`}
+                  className={`weightage-entry-card weightage-${entry.module.toLowerCase()}`}
+                >
+                  <div className="weightage-card-header">
+                    <span className="weightage-card-module">{entry.module}</span>
+                    <span className="weightage-card-question">{entry.question}</span>
+                  </div>
+                  <div className="weightage-card-grid">
+                    <div>
+                      <span className="weightage-card-label">Avg Qs</span>
+                      <span className="weightage-card-value">{entry.avgQs}</span>
+                    </div>
+                    <div>
+                      <span className="weightage-card-label">Listening</span>
+                      <span className="weightage-card-value">
+                        {entry.scores.listening ? entry.scores.listening.toFixed(2) : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="weightage-card-label">Speaking</span>
+                      <span className="weightage-card-value">
+                        {entry.scores.speaking ? entry.scores.speaking.toFixed(2) : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="weightage-card-label">Reading</span>
+                      <span className="weightage-card-value">
+                        {entry.scores.reading ? entry.scores.reading.toFixed(2) : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="weightage-card-label">Writing</span>
+                      <span className="weightage-card-value">
+                        {entry.scores.writing ? entry.scores.writing.toFixed(2) : '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="weightage-card-label">Total</span>
+                      <span className="weightage-card-value">{entry.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="weightage-entry-card weightage-total-card">
+                <div className="weightage-card-header">
+                  <span className="weightage-card-module">Totals</span>
+                  <span className="weightage-card-question">All modules</span>
+                </div>
+                <div className="weightage-card-grid">
+                  <div>
+                    <span className="weightage-card-label">Listening</span>
+                    <span className="weightage-card-value">{weightageTotals.listening.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="weightage-card-label">Speaking</span>
+                    <span className="weightage-card-value">{weightageTotals.speaking.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="weightage-card-label">Reading</span>
+                    <span className="weightage-card-value">{weightageTotals.reading.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="weightage-card-label">Writing</span>
+                    <span className="weightage-card-value">{weightageTotals.writing.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="weightage-card-label">Total</span>
+                    <span className="weightage-card-value">{weightageTotals.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <p className="backup-note">
               Source: New Score Weightage Chart in the AlfaPTE guide (Aug 7, 2025 update).
