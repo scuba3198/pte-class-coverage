@@ -119,6 +119,10 @@ function App() {
     () => getCoverageQuestionTypeIdsForSkill(activeSkill, 72),
     [activeSkill]
   );
+  const coverageMarksTotal = useMemo(
+    () => coverageEntries.reduce((sum, entry) => sum + (entry.scores[activeSkill] || 0), 0),
+    [coverageEntries, activeSkill]
+  );
 
   const coverageCounts = useMemo(() => {
     const covered = coverageQuestionTypeIds.filter((id) => coverageForClass[id]).length;
@@ -351,6 +355,7 @@ function App() {
                 <p className="card-subtitle">
                   {coverageCounts.covered} of {coverageCounts.total} question types covered (72+ marks)
                 </p>
+                <p className="card-subtitle">{`Coverage total: ${coverageMarksTotal.toFixed(2)} / 90`}</p>
               </div>
               <div className="progress-ring">
                 <span>{Math.round((coverageCounts.covered / coverageCounts.total) * 100) || 0}%</span>
