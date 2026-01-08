@@ -1,4 +1,4 @@
-﻿export const modules = [
+export const modules = [
   {
     id: 'speaking',
     name: 'Speaking',
@@ -215,6 +215,13 @@ export const weightageChart = [
 const normalizeQuestionName = (value) =>
   value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+const createSessionId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
 const questionTypeIdToModuleId = new Map(
   modules.flatMap((module) =>
     module.questionTypes.map((questionType) => [questionType.id, module.id])
@@ -238,7 +245,7 @@ const questionTypeAliases = new Map([
   ['mcqmultiple|listening', 'listening-mcma'],
   ['mcqsingle|listening', 'listening-mcsa'],
   ['fillintheblanks|listening', 'listening-fill-blanks'],
-  ['selectmissiongword|listening', 'select-missing-word'],
+  ['selectmissingword|listening', 'select-missing-word'],
 ]);
 
 const moduleNameToId = {
@@ -354,7 +361,7 @@ export const normalizeState = (state) => {
           : [];
 
         return {
-          id: session.id || crypto.randomUUID(),
+          id: session.id || createSessionId(),
           date: session.date || new Date().toISOString().slice(0, 10),
           moduleId: normalizeSessionModuleId(session.moduleId, questionTypeIds),
           questionTypeIds,
@@ -457,3 +464,4 @@ export const getCoverageEntriesForSkill = (skill, target = 72) =>
 
 export const getCoverageQuestionTypeIdsForSkill = (skill, target = 72) =>
   getTopEntriesForSkillTarget(skill, target).map((entry) => entry.questionTypeId);
+
