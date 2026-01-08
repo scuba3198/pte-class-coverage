@@ -115,6 +115,11 @@ function App() {
     () => getCoverageEntriesForSkill(activeSkill, 72),
     [activeSkill]
   );
+  const sortedCoverageEntries = useMemo(() => {
+    return [...coverageEntries].sort(
+      (a, b) => (b.scores[activeSkill] || 0) - (a.scores[activeSkill] || 0)
+    );
+  }, [coverageEntries, activeSkill]);
   const coverageQuestionTypeIds = useMemo(
     () => getCoverageQuestionTypeIdsForSkill(activeSkill, 72),
     [activeSkill]
@@ -380,7 +385,7 @@ function App() {
               </p>
             </div>
             <div className="question-grid">
-              {coverageEntries.map((entry) => {
+              {sortedCoverageEntries.map((entry) => {
                 const originModuleId =
                   entry.originModuleId || getModuleIdByQuestionTypeId(entry.questionTypeId);
                 const moduleInitials = {
@@ -438,7 +443,7 @@ function App() {
               </label>
             </div>
             <div className="question-grid compact">
-              {coverageEntries.map((entry) => {
+              {sortedCoverageEntries.map((entry) => {
                 const originModuleId =
                   entry.originModuleId || getModuleIdByQuestionTypeId(entry.questionTypeId);
                 const moduleInitials = {
