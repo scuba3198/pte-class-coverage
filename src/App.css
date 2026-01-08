@@ -241,10 +241,12 @@
   display: grid;
   gap: 24px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
 }
 
 .coverage-card {
   grid-column: span 2;
+  align-self: start;
 }
 
 .card-header {
