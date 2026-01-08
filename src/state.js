@@ -206,6 +206,82 @@ export const weightageChart = [
   },
 ];
 
+const normalizeQuestionName = (value) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const questionTypeNameToId = new Map(
+  modules.flatMap((module) =>
+    module.questionTypes.map((questionType) => [
+      normalizeQuestionName(questionType.name),
+      questionType.id,
+    ])
+  )
+);
+
+const weightageEntries = weightageChart
+  .map((entry) => ({
+    ...entry,
+    questionTypeId: questionTypeNameToId.get(normalizeQuestionName(entry.question)),
+  }))
+  .filter((entry) => entry.questionTypeId);
+
+const getSkillTotal = (skill) =>
+  weightageEntries.reduce((total, entry) => total + (entry.scores[skill] || 0), 0);
+
+export const getTopQuestionTypeIdsBySkill = (skill, threshold = 0.8) => {
+  const total = getSkillTotal(skill);
+  if (!total) {
+    return [];
+  }
+
+  const sorted = weightageEntries
+    .filter((entry) => entry.scores[skill])
+    .sort((a, b) => b.scores[skill] - a.scores[skill]);
+
+  const result = [];
+  let runningTotal = 0;
+  const target = total * threshold;
+
+  for (const entry of sorted) {
+    if (runningTotal >= target) {
+      break;
+    }
+    result.push(entry.questionTypeId);
+    runningTotal += entry.scores[skill];
+  }
+
+  return result;
+};
+
+export const getPriorityQuestionTypeIds = (threshold = 0.8) => {
+  const skills = ['listening', 'speaking', 'reading', 'writing'];
+  const ids = new Set();
+
+  skills.forEach((skill) => {
+    getTopQuestionTypeIdsBySkill(skill, threshold).forEach((id) => ids.add(id));
+  });
+
+  return Array.from(ids);
+};
+
+export const getPriorityQuestionTypesForModule = (moduleId, threshold = 0.8) => {
+  if (moduleId === 'speaking-writing') {
+    const ids = new Set([
+      ...getTopQuestionTypeIdsBySkill('speaking', threshold),
+      ...getTopQuestionTypeIdsBySkill('writing', threshold),
+    ]);
+    return modules
+      .find((module) => module.id === moduleId)
+      .questionTypes.filter((questionType) => ids.has(questionType.id));
+  }
+
+  const skill = moduleId === 'listening' ? 'listening' : 'reading';
+  const ids = new Set(getTopQuestionTypeIdsBySkill(skill, threshold));
+  return modules
+    .find((module) => module.id === moduleId)
+    .questionTypes.filter((questionType) => ids.has(questionType.id));
+};
+
 const allQuestionTypeIds = modules.flatMap((module) =>
   module.questionTypes.map((questionType) => questionType.id)
 );

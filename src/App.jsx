@@ -6,6 +6,8 @@ import {
   getAllQuestionTypes,
   getModuleById,
   getQuestionTypeById,
+  getPriorityQuestionTypeIds,
+  getPriorityQuestionTypesForModule,
   modules,
   normalizeState,
   weightageChart,
@@ -99,14 +101,27 @@ function App() {
   const coverageForClass = state.coverage[activeClassId] || {};
   const sessionsForClass = state.sessions[activeClassId] || [];
 
+  const priorityQuestionTypeIds = useMemo(() => getPriorityQuestionTypeIds(0.8), []);
+  const priorityQuestionTypes = useMemo(() => {
+    if (!priorityQuestionTypeIds.length) {
+      return getAllQuestionTypes();
+    }
+    const idSet = new Set(priorityQuestionTypeIds);
+    return getAllQuestionTypes().filter((type) => idSet.has(type.id));
+  }, [priorityQuestionTypeIds]);
+
   const coverageCounts = useMemo(() => {
-    const allTypes = getAllQuestionTypes();
-    const covered = allTypes.filter((type) => coverageForClass[type.id]).length;
-    return { covered, total: allTypes.length };
-  }, [coverageForClass]);
+    const covered = priorityQuestionTypes.filter((type) => coverageForClass[type.id]).length;
+    return { covered, total: priorityQuestionTypes.length };
+  }, [coverageForClass, priorityQuestionTypes]);
+
+  const moduleQuestionTypes = useMemo(() => {
+    const filtered = getPriorityQuestionTypesForModule(activeModuleId, 0.8);
+    return filtered.length ? filtered : activeModule.questionTypes;
+  }, [activeModule, activeModuleId]);
 
   const moduleCoverageCounts = useMemo(() => {
-    return activeModule.questionTypes.reduce(
+    return moduleQuestionTypes.reduce(
       (acc, questionType) => {
         if (coverageForClass[questionType.id]) {
           acc.covered += 1;
@@ -116,7 +131,7 @@ function App() {
       },
       { covered: 0, total: 0 }
     );
-  }, [activeModule, coverageForClass]);
+  }, [moduleQuestionTypes, coverageForClass]);
 
   useEffect(() => {
     setSessionSelection([]);
@@ -329,7 +344,7 @@ function App() {
                 <p className="section-label">Overall coverage</p>
                 <h2>{activeClass.name}</h2>
                 <p className="card-subtitle">
-                  {coverageCounts.covered} of {coverageCounts.total} question types covered
+                  {coverageCounts.covered} of {coverageCounts.total} question types covered (Top 80%)
                 </p>
               </div>
               <div className="progress-ring">
@@ -355,7 +370,7 @@ function App() {
               </p>
             </div>
             <div className="question-grid">
-              {activeModule.questionTypes.map((questionType) => (
+              {moduleQuestionTypes.map((questionType) => (
                 <button
                   key={questionType.id}
                   className={
