@@ -355,7 +355,7 @@ function App() {
                 <p className="card-subtitle">
                   {coverageCounts.covered} of {coverageCounts.total} question types covered (72+ marks)
                 </p>
-                <p className="card-subtitle">{`Coverage total: ${coverageMarksTotal.toFixed(2)} / 90`}</p>
+                <p className="card-subtitle">{`Coverage total: ${coverageMarksTotal} / 90`}</p>
               </div>
               <div className="progress-ring">
                 <span>{Math.round((coverageCounts.covered / coverageCounts.total) * 100) || 0}%</span>
