@@ -3,11 +3,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   buildDefaultState,
   classDefaults,
-  getAllQuestionTypes,
+  getCoverageEntriesForSkill,
+  getCoverageQuestionTypeIdsForSkill,
   getModuleById,
+  getModuleIdByQuestionTypeId,
   getQuestionTypeById,
-  getPriorityQuestionTypeIds,
-  getPriorityQuestionTypesForModule,
   modules,
   normalizeState,
   weightageChart,
@@ -101,29 +101,34 @@ function App() {
   const coverageForClass = state.coverage[activeClassId] || {};
   const sessionsForClass = state.sessions[activeClassId] || [];
 
-  const priorityQuestionTypeIds = useMemo(() => getPriorityQuestionTypeIds(0.8), []);
-  const priorityQuestionTypes = useMemo(() => {
-    if (!priorityQuestionTypeIds.length) {
-      return getAllQuestionTypes();
-    }
-    const idSet = new Set(priorityQuestionTypeIds);
-    return getAllQuestionTypes().filter((type) => idSet.has(type.id));
-  }, [priorityQuestionTypeIds]);
+  const activeSkill = useMemo(() => {
+    const skillMap = {
+      speaking: 'speaking',
+      writing: 'writing',
+      reading: 'reading',
+      listening: 'listening',
+    };
+    return skillMap[activeModuleId] || 'speaking';
+  }, [activeModuleId]);
+
+  const coverageEntries = useMemo(
+    () => getCoverageEntriesForSkill(activeSkill, 72),
+    [activeSkill]
+  );
+  const coverageQuestionTypeIds = useMemo(
+    () => getCoverageQuestionTypeIdsForSkill(activeSkill, 72),
+    [activeSkill]
+  );
 
   const coverageCounts = useMemo(() => {
-    const covered = priorityQuestionTypes.filter((type) => coverageForClass[type.id]).length;
-    return { covered, total: priorityQuestionTypes.length };
-  }, [coverageForClass, priorityQuestionTypes]);
-
-  const moduleQuestionTypes = useMemo(() => {
-    const filtered = getPriorityQuestionTypesForModule(activeModuleId, 0.8);
-    return filtered.length ? filtered : activeModule.questionTypes;
-  }, [activeModule, activeModuleId]);
+    const covered = coverageQuestionTypeIds.filter((id) => coverageForClass[id]).length;
+    return { covered, total: coverageQuestionTypeIds.length };
+  }, [coverageForClass, coverageQuestionTypeIds]);
 
   const moduleCoverageCounts = useMemo(() => {
-    return moduleQuestionTypes.reduce(
-      (acc, questionType) => {
-        if (coverageForClass[questionType.id]) {
+    return coverageQuestionTypeIds.reduce(
+      (acc, questionTypeId) => {
+        if (coverageForClass[questionTypeId]) {
           acc.covered += 1;
         }
         acc.total += 1;
@@ -131,7 +136,7 @@ function App() {
       },
       { covered: 0, total: 0 }
     );
-  }, [moduleQuestionTypes, coverageForClass]);
+  }, [coverageQuestionTypeIds, coverageForClass]);
 
   useEffect(() => {
     setSessionSelection([]);
@@ -344,7 +349,7 @@ function App() {
                 <p className="section-label">Overall coverage</p>
                 <h2>{activeClass.name}</h2>
                 <p className="card-subtitle">
-                  {coverageCounts.covered} of {coverageCounts.total} question types covered (Top 80%)
+                  {coverageCounts.covered} of {coverageCounts.total} question types covered (Top 72 marks)
                 </p>
               </div>
               <div className="progress-ring">
@@ -370,21 +375,33 @@ function App() {
               </p>
             </div>
             <div className="question-grid">
-              {moduleQuestionTypes.map((questionType) => (
+              {coverageEntries.map((entry) => {
+                const originModuleId =
+                  entry.originModuleId || getModuleIdByQuestionTypeId(entry.questionTypeId);
+                const moduleInitials = {
+                  speaking: 'S',
+                  writing: 'W',
+                  reading: 'R',
+                  listening: 'L',
+                };
+                const originSuffix =
+                  originModuleId && originModuleId !== activeModuleId
+                    ? ` (${moduleInitials[originModuleId] || '?'})`
+                    : '';
+                const isCovered = coverageForClass[entry.questionTypeId];
+
+                return (
                 <button
-                  key={questionType.id}
-                  className={
-                    coverageForClass[questionType.id] ? 'question-card covered' : 'question-card'
-                  }
+                  key={`${entry.questionTypeId}-${activeModuleId}`}
+                  className={isCovered ? 'question-card covered' : 'question-card'}
                   type="button"
-                  onClick={() => toggleCoverage(questionType.id)}
+                  onClick={() => toggleCoverage(entry.questionTypeId)}
                 >
-                  <span className="question-name">{questionType.name}</span>
-                  <span className="question-status">
-                    {coverageForClass[questionType.id] ? 'Covered' : 'Not yet'}
-                  </span>
+                  <span className="question-name">{`${entry.question}${originSuffix}`}</span>
+                  <span className="question-status">{isCovered ? 'Covered' : 'Not yet'}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
 

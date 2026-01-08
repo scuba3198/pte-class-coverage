@@ -1,7 +1,7 @@
 ﻿export const modules = [
   {
-    id: 'speaking-writing',
-    name: 'Speaking & Writing',
+    id: 'speaking',
+    name: 'Speaking',
     questionTypes: [
       { id: 'personal-introduction', name: 'Personal Introduction' },
       { id: 'read-aloud', name: 'Read Aloud' },
@@ -11,6 +11,12 @@
       { id: 'answer-short-question', name: 'Answer Short Question' },
       { id: 'summarize-group-discussion', name: 'Summarize Group Discussion' },
       { id: 'respond-to-a-situation', name: 'Respond to a Situation' },
+    ],
+  },
+  {
+    id: 'writing',
+    name: 'Writing',
+    questionTypes: [
       { id: 'summarize-written-text', name: 'Summarize Written Text' },
       { id: 'write-essay', name: 'Write Essay' },
     ],
@@ -209,6 +215,12 @@ export const weightageChart = [
 const normalizeQuestionName = (value) =>
   value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+const questionTypeIdToModuleId = new Map(
+  modules.flatMap((module) =>
+    module.questionTypes.map((questionType) => [questionType.id, module.id])
+  )
+);
+
 const questionTypeNameToId = new Map(
   modules.flatMap((module) =>
     module.questionTypes.map((questionType) => [
@@ -223,64 +235,13 @@ const weightageEntries = weightageChart
     ...entry,
     questionTypeId: questionTypeNameToId.get(normalizeQuestionName(entry.question)),
   }))
-  .filter((entry) => entry.questionTypeId);
-
-const getSkillTotal = (skill) =>
-  weightageEntries.reduce((total, entry) => total + (entry.scores[skill] || 0), 0);
-
-export const getTopQuestionTypeIdsBySkill = (skill, threshold = 0.8) => {
-  const total = getSkillTotal(skill);
-  if (!total) {
-    return [];
-  }
-
-  const sorted = weightageEntries
-    .filter((entry) => entry.scores[skill])
-    .sort((a, b) => b.scores[skill] - a.scores[skill]);
-
-  const result = [];
-  let runningTotal = 0;
-  const target = total * threshold;
-
-  for (const entry of sorted) {
-    if (runningTotal >= target) {
-      break;
-    }
-    result.push(entry.questionTypeId);
-    runningTotal += entry.scores[skill];
-  }
-
-  return result;
-};
-
-export const getPriorityQuestionTypeIds = (threshold = 0.8) => {
-  const skills = ['listening', 'speaking', 'reading', 'writing'];
-  const ids = new Set();
-
-  skills.forEach((skill) => {
-    getTopQuestionTypeIdsBySkill(skill, threshold).forEach((id) => ids.add(id));
-  });
-
-  return Array.from(ids);
-};
-
-export const getPriorityQuestionTypesForModule = (moduleId, threshold = 0.8) => {
-  if (moduleId === 'speaking-writing') {
-    const ids = new Set([
-      ...getTopQuestionTypeIdsBySkill('speaking', threshold),
-      ...getTopQuestionTypeIdsBySkill('writing', threshold),
-    ]);
-    return modules
-      .find((module) => module.id === moduleId)
-      .questionTypes.filter((questionType) => ids.has(questionType.id));
-  }
-
-  const skill = moduleId === 'listening' ? 'listening' : 'reading';
-  const ids = new Set(getTopQuestionTypeIdsBySkill(skill, threshold));
-  return modules
-    .find((module) => module.id === moduleId)
-    .questionTypes.filter((questionType) => ids.has(questionType.id));
-};
+  .map((entry) => ({
+    ...entry,
+    originModuleId: entry.questionTypeId
+      ? questionTypeIdToModuleId.get(entry.questionTypeId)
+      : null,
+  }))
+  .filter((entry) => entry.questionTypeId && entry.originModuleId);
 
 const allQuestionTypeIds = modules.flatMap((module) =>
   module.questionTypes.map((questionType) => questionType.id)
@@ -315,6 +276,21 @@ const normalizeClasses = (classes) => {
     const existing = classes.find((item) => item.id === classItem.id);
     return existing ? { ...classItem, name: existing.name || classItem.name } : classItem;
   });
+};
+
+const writingQuestionTypeIds = new Set(
+  modules.find((module) => module.id === 'writing').questionTypes.map((item) => item.id)
+);
+
+const normalizeSessionModuleId = (moduleId, questionTypeIds) => {
+  if (modules.some((module) => module.id === moduleId)) {
+    return moduleId;
+  }
+  if (moduleId === 'speaking-writing') {
+    const hasWriting = questionTypeIds.some((id) => writingQuestionTypeIds.has(id));
+    return hasWriting ? 'writing' : 'speaking';
+  }
+  return 'speaking';
 };
 
 export const normalizeState = (state) => {
@@ -353,7 +329,7 @@ export const normalizeState = (state) => {
         return {
           id: session.id || crypto.randomUUID(),
           date: session.date || new Date().toISOString().slice(0, 10),
-          moduleId: session.moduleId || 'speaking-writing',
+          moduleId: normalizeSessionModuleId(session.moduleId, questionTypeIds),
           questionTypeIds,
           note: session.note || '',
         };
@@ -405,7 +381,39 @@ export const mergeStates = (remoteState, localState) => {
 export const getModuleById = (moduleId) =>
   modules.find((module) => module.id === moduleId) || modules[0];
 
+export const getModuleIdByQuestionTypeId = (questionTypeId) =>
+  questionTypeIdToModuleId.get(questionTypeId);
+
 export const getQuestionTypeById = (questionTypeId) =>
   modules.flatMap((module) => module.questionTypes).find((item) => item.id === questionTypeId);
 
 export const getAllQuestionTypes = () => modules.flatMap((module) => module.questionTypes);
+
+const getTopEntriesForSkillTarget = (skill, target = 72) => {
+  const entries = weightageEntries
+    .filter((entry) => entry.scores[skill])
+    .sort((a, b) => b.scores[skill] - a.scores[skill]);
+
+  if (!entries.length) {
+    return [];
+  }
+
+  const result = [];
+  let runningTotal = 0;
+
+  for (const entry of entries) {
+    if (runningTotal >= target) {
+      break;
+    }
+    result.push(entry);
+    runningTotal += entry.scores[skill];
+  }
+
+  return result;
+};
+
+export const getCoverageEntriesForSkill = (skill, target = 72) =>
+  getTopEntriesForSkillTarget(skill, target);
+
+export const getCoverageQuestionTypeIdsForSkill = (skill, target = 72) =>
+  getTopEntriesForSkillTarget(skill, target).map((entry) => entry.questionTypeId);
