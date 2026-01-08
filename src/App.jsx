@@ -6,6 +6,7 @@ import {
   classDefaults,
   getCoverageEntriesForSkill,
   getCoverageQuestionTypeIdsForSkill,
+  getAllQuestionTypes,
   getModuleById,
   getModuleIdByQuestionTypeId,
   getQuestionTypeById,
@@ -63,7 +64,7 @@ const readStoredState = () => {
       return defaultState;
     }
     return normalizeState(JSON.parse(raw));
-  } catch (error) {
+  } catch {
     return defaultState;
   }
 };
@@ -71,7 +72,7 @@ const readStoredState = () => {
 const writeStoredState = (state) => {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
+  } catch {
     // Ignore quota/storage errors and keep state in memory.
   }
 };
@@ -81,10 +82,9 @@ function App() {
   const [activeClassId, setActiveClassId] = useState(defaultClassId);
   const [activeModuleId, setActiveModuleId] = useState(defaultModuleId);
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [sessionSelection, setSessionSelection] = useState([]);
   const [applyToCoverage, setApplyToCoverage] = useState(true);
-  const [showClassEditor, setShowClassEditor] = useState(false);
   const [importError, setImportError] = useState('');
+  const [newClassName, setNewClassName] = useState('');
   const stateRef = useRef(state);
 
   useEffect(() => {
@@ -99,8 +99,14 @@ function App() {
   const activeClass = state.classes.find((classItem) => classItem.id === activeClassId) ||
     state.classes[0];
   const activeModule = getModuleById(activeModuleId);
-  const coverageForClass = state.coverage[activeClassId] || {};
-  const sessionsForClass = state.sessions[activeClassId] || [];
+  const coverageForClass = useMemo(
+    () => state.coverage[activeClassId] || {},
+    [state.coverage, activeClassId]
+  );
+  const sessionsForClass = useMemo(
+    () => state.sessions[activeClassId] || [],
+    [state.sessions, activeClassId]
+  );
 
   const activeSkill = useMemo(() => {
     const skillMap = {
@@ -148,12 +154,12 @@ function App() {
     );
   }, [coverageQuestionTypeIds, coverageForClass]);
 
-  useEffect(() => {
+  const sessionSelection = useMemo(() => {
     const existingSession = sessionsForClass.find(
       (entry) => entry.date === sessionDate && entry.moduleId === activeModuleId
     );
-    setSessionSelection(existingSession ? [...existingSession.questionTypeIds] : []);
-  }, [activeClassId, activeModuleId, sessionDate, sessionsForClass]);
+    return existingSession ? [...existingSession.questionTypeIds] : [];
+  }, [activeModuleId, sessionDate, sessionsForClass]);
 
   const toggleCoverage = (questionTypeId) => {
     updateState((prevState) => {
@@ -165,52 +171,48 @@ function App() {
   };
 
   const toggleSessionItem = (questionTypeId) => {
-    setSessionSelection((prev) => {
-      const nextSelection = prev.includes(questionTypeId)
-        ? prev.filter((id) => id !== questionTypeId)
-        : [...prev, questionTypeId];
+    const nextSelection = sessionSelection.includes(questionTypeId)
+      ? sessionSelection.filter((id) => id !== questionTypeId)
+      : [...sessionSelection, questionTypeId];
 
-      updateState((prevState) => {
-        const nextState = normalizeState(prevState);
-        const sessions = nextState.sessions[activeClassId];
-        const existingIndex = sessions.findIndex(
-          (entry) => entry.date === sessionDate && entry.moduleId === activeModuleId
-        );
+    updateState((prevState) => {
+      const nextState = normalizeState(prevState);
+      const sessions = nextState.sessions[activeClassId];
+      const existingIndex = sessions.findIndex(
+        (entry) => entry.date === sessionDate && entry.moduleId === activeModuleId
+      );
 
-        if (!nextSelection.length) {
-          if (existingIndex !== -1) {
-            sessions.splice(existingIndex, 1);
-          }
-          return nextState;
-        }
-
-        const sessionId = existingIndex !== -1 ? sessions[existingIndex].id : createSessionId();
-        const sessionEntry = {
-          id: sessionId,
-          date: sessionDate,
-          moduleId: activeModuleId,
-          questionTypeIds: [...nextSelection],
-          note: '',
-        };
-
+      if (!nextSelection.length) {
         if (existingIndex !== -1) {
-          sessions[existingIndex] = sessionEntry;
-        } else {
-          sessions.push(sessionEntry);
+          sessions.splice(existingIndex, 1);
         }
-
-        sessions.sort((a, b) => a.date.localeCompare(b.date));
-
-        if (applyToCoverage) {
-          nextSelection.forEach((selectedId) => {
-            nextState.coverage[activeClassId][selectedId] = true;
-          });
-        }
-
         return nextState;
-      });
+      }
 
-      return nextSelection;
+      const sessionId = existingIndex !== -1 ? sessions[existingIndex].id : createSessionId();
+      const sessionEntry = {
+        id: sessionId,
+        date: sessionDate,
+        moduleId: activeModuleId,
+        questionTypeIds: [...nextSelection],
+        note: '',
+      };
+
+      if (existingIndex !== -1) {
+        sessions[existingIndex] = sessionEntry;
+      } else {
+        sessions.push(sessionEntry);
+      }
+
+      sessions.sort((a, b) => a.date.localeCompare(b.date));
+
+      if (applyToCoverage) {
+        nextSelection.forEach((selectedId) => {
+          nextState.coverage[activeClassId][selectedId] = true;
+        });
+      }
+
+      return nextState;
     });
   };
 
@@ -239,14 +241,59 @@ function App() {
     });
   };
 
-  const updateClassName = (classId, name) => {
+  const addClass = () => {
+    const name = newClassName.trim();
+    if (!name) {
+      return;
+    }
+
+    const classId = `class-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const questionTypeIds = getAllQuestionTypes().map((item) => item.id);
+
     updateState((prevState) => {
       const nextState = normalizeState(prevState);
-      nextState.classes = nextState.classes.map((classItem) =>
-        classItem.id === classId ? { ...classItem, name } : classItem
-      );
+      nextState.classes = [...nextState.classes, { id: classId, name }];
+      nextState.coverage[classId] = {};
+      questionTypeIds.forEach((questionTypeId) => {
+        nextState.coverage[classId][questionTypeId] = false;
+      });
+      nextState.sessions[classId] = [];
       return nextState;
     });
+
+    setNewClassName('');
+    setActiveClassId(classId);
+  };
+
+  const removeClass = (classId) => {
+    const classesCount = stateRef.current.classes.length;
+    if (classesCount <= 1) {
+      window.alert('At least one class is required.');
+      return;
+    }
+    if (!window.confirm('Remove this class and all saved coverage + sessions?')) {
+      return;
+    }
+
+    let nextActiveId = activeClassId;
+    updateState((prevState) => {
+      const nextState = normalizeState(prevState);
+      const remainingClasses = nextState.classes.filter((classItem) => classItem.id !== classId);
+      if (!remainingClasses.length) {
+        return nextState;
+      }
+      nextState.classes = remainingClasses;
+      delete nextState.coverage[classId];
+      delete nextState.sessions[classId];
+      if (!remainingClasses.some((classItem) => classItem.id === activeClassId)) {
+        nextActiveId = remainingClasses[0].id;
+      }
+      return nextState;
+    });
+
+    if (nextActiveId !== activeClassId) {
+      setActiveClassId(nextActiveId);
+    }
   };
 
   const exportData = () => {
@@ -265,7 +312,7 @@ function App() {
       const normalized = normalizeState(parsed);
       setImportError('');
       updateState(() => normalized);
-    } catch (error) {
+    } catch {
       setImportError('Invalid backup file. Please select a valid JSON export.');
     }
   };
@@ -340,34 +387,48 @@ function App() {
             <button className="ghost-button" type="button" onClick={resetClass}>
               Reset class cycle
             </button>
-            <button
-              className="ghost-button"
-              type="button"
-              onClick={() => setShowClassEditor((prev) => !prev)}
-            >
-              {showClassEditor ? 'Hide class names' : 'Edit class names'}
-            </button>
           </div>
         </section>
 
-        {showClassEditor ? (
-          <section className="card class-editor">
-            <h2>Class names</h2>
-            <p>Rename classes any time. Names are saved locally in this browser.</p>
-            <div className="class-editor-grid">
-              {state.classes.map((classItem) => (
-                <label key={classItem.id}>
-                  {classItem.name}
-                  <input
-                    type="text"
-                    value={classItem.name}
-                    onChange={(event) => updateClassName(classItem.id, event.target.value)}
-                  />
-                </label>
-              ))}
-            </div>
-          </section>
-        ) : null}
+        <section className="card class-editor">
+          <h2>Manage classes</h2>
+          <p>Add or remove classes. Data stays local in this browser.</p>
+          <form
+            className="class-editor-grid"
+            onSubmit={(event) => {
+              event.preventDefault();
+              addClass();
+            }}
+          >
+            <label>
+              New class name
+              <input
+                type="text"
+                value={newClassName}
+                onChange={(event) => setNewClassName(event.target.value)}
+                placeholder="e.g., 11-12"
+              />
+            </label>
+            <button className="primary-button" type="submit">
+              Add class
+            </button>
+          </form>
+          <div className="class-list class-list-editor">
+            {state.classes.map((classItem) => (
+              <div key={classItem.id} className="class-chip class-chip-manage">
+                <span>{classItem.name}</span>
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => removeClass(classItem.id)}
+                  disabled={state.classes.length <= 1}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="overview">
           <div className="card coverage-card">

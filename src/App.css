@@ -199,6 +199,10 @@
   flex-wrap: wrap;
 }
 
+.class-list-editor {
+  margin-top: 16px;
+}
+
 .class-chip {
   border: 1px solid rgba(60, 60, 60, 0.16);
   border-radius: 999px;
@@ -208,6 +212,17 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.class-chip-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.class-chip-manage .ghost-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
 }
 
 .class-chip.active {

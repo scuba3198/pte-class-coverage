@@ -306,10 +306,29 @@ const normalizeClasses = (classes) => {
     return fallback;
   }
 
-  return classDefaults.map((classItem) => {
-    const existing = classes.find((item) => item.id === classItem.id);
-    return existing ? { ...classItem, name: existing.name || classItem.name } : classItem;
+  const normalized = [];
+  const seen = new Set();
+
+  classDefaults.forEach((classItem) => {
+    const existing = classes.find((item) => item && item.id === classItem.id);
+    normalized.push(
+      existing ? { ...classItem, name: existing.name || classItem.name } : { ...classItem }
+    );
+    seen.add(classItem.id);
   });
+
+  classes.forEach((classItem) => {
+    if (!classItem || typeof classItem !== 'object') {
+      return;
+    }
+    if (!classItem.id || !classItem.name || seen.has(classItem.id)) {
+      return;
+    }
+    normalized.push({ id: classItem.id, name: classItem.name });
+    seen.add(classItem.id);
+  });
+
+  return normalized.length ? normalized : fallback;
 };
 
 const writingQuestionTypeIds = new Set(
