@@ -242,7 +242,6 @@
   gap: 24px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   align-items: start;
-  grid-auto-flow: dense;
 }
 
 .coverage-card {
