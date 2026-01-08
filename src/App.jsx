@@ -16,6 +16,7 @@ import {
 } from './state';
 
 const STORAGE_KEY = 'pte-tracker-state-v1';
+const THEME_KEY = 'pte-tracker-theme';
 
 const createSessionId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -57,6 +58,23 @@ const downloadJson = (data, filename) => {
 
 const sortByName = (items) => [...items].sort((a, b) => a.name.localeCompare(b.name));
 
+const getInitialTheme = () => {
+  try {
+    const stored = window.localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+
+  return 'light';
+};
+
 const readStoredState = () => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -86,12 +104,22 @@ function App() {
   const [importError, setImportError] = useState('');
   const [newClassName, setNewClassName] = useState('');
   const [showHelp, setShowHelp] = useState(false);
+  const [theme, setTheme] = useState(() => getInitialTheme());
   const stateRef = useRef(state);
 
   useEffect(() => {
     stateRef.current = state;
     writeStoredState(state);
   }, [state]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [theme]);
 
   const updateState = (updater) => {
     setState((prevState) => normalizeState(updater(prevState)));
@@ -363,6 +391,16 @@ function App() {
               <p className="auth-label">Storage</p>
               <p className="auth-value">Local browser storage</p>
             </div>
+          </div>
+          <div className="theme-toggle">
+            <p className="auth-label">Theme</p>
+            <button
+              className="ghost-button"
+              type="button"
+              onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+            >
+              {theme === 'light' ? 'Switch to dark' : 'Switch to light'}
+            </button>
           </div>
         </div>
       </header>

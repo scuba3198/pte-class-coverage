@@ -25,8 +25,8 @@
   width: 54px;
   height: 54px;
   border-radius: 18px;
-  background: #fff;
-  border: 1px solid rgba(60, 60, 60, 0.12);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
   display: grid;
   place-items: center;
   box-shadow: var(--shadow-soft);
@@ -56,7 +56,7 @@
   font-weight: 600;
   font-style: italic;
   margin-left: 8px;
-  color: #d77b3e;
+  color: var(--signature);
 }
 
 .brand h1 {
@@ -86,8 +86,8 @@
   padding: 8px 14px;
   border-radius: 999px;
   font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(60, 60, 60, 0.12);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
   color: var(--ink-600);
   box-shadow: var(--shadow-soft);
 }
@@ -105,8 +105,8 @@
 }
 
 .auth-signed-in {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(60, 60, 60, 0.12);
+  background: var(--surface-soft-2);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 14px 18px;
   display: flex;
@@ -115,6 +115,20 @@
   justify-content: space-between;
   min-width: 280px;
   box-shadow: var(--shadow-soft);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+
+.theme-toggle .ghost-button {
+  padding: 8px 14px;
 }
 
 .auth-label {
@@ -130,8 +144,8 @@
 }
 
 .auth-form {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(60, 60, 60, 0.12);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
   border-radius: 22px;
   padding: 18px;
   display: grid;
@@ -150,7 +164,7 @@
 .auth-toggle {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  background: rgba(246, 246, 246, 0.8);
+  background: var(--surface-muted-2);
   border-radius: 12px;
   padding: 4px;
   gap: 6px;
@@ -167,7 +181,7 @@
 }
 
 .auth-toggle button.active {
-  background: #fff;
+  background: var(--surface-strong);
   box-shadow: var(--shadow-soft);
   color: var(--ink-700);
 }
@@ -211,10 +225,10 @@
 }
 
 .class-chip {
-  border: 1px solid rgba(60, 60, 60, 0.16);
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-soft);
   color: var(--ink-700);
   font-weight: 500;
   cursor: pointer;
@@ -234,7 +248,7 @@
 
 .class-chip.active {
   background: var(--ink-900);
-  color: #fff;
+  color: var(--ink-inverse);
   border-color: transparent;
   box-shadow: var(--shadow-soft);
 }
@@ -254,8 +268,8 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(60, 60, 60, 0.12);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 28px;
   padding: 24px;
   box-shadow: var(--shadow-soft);
@@ -314,8 +328,8 @@
   border-radius: 24px;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, rgba(40, 40, 40, 0.8), rgba(90, 90, 90, 0.6));
-  color: #fff;
+  background: var(--progress-ring);
+  color: var(--ink-inverse);
   font-weight: 600;
   box-shadow: var(--shadow-soft);
 }
@@ -328,8 +342,8 @@
 }
 
 .module-tab {
-  border: 1px solid rgba(60, 60, 60, 0.16);
-  background: rgba(248, 248, 248, 0.9);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-muted);
   padding: 8px 14px;
   border-radius: 999px;
   cursor: pointer;
@@ -339,7 +353,7 @@
 
 .module-tab.active {
   background: var(--ink-900);
-  color: #fff;
+  color: var(--ink-inverse);
   border-color: transparent;
 }
 
@@ -361,8 +375,8 @@
 .question-card {
   border-radius: 18px;
   padding: 14px 16px;
-  border: 1px solid rgba(60, 60, 60, 0.12);
-  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--border);
+  background: var(--surface-glass);
   text-align: left;
   display: grid;
   gap: 6px;
@@ -376,13 +390,13 @@
 }
 
 .question-card.covered {
-  border-color: rgba(65, 118, 78, 0.5);
-  background: rgba(234, 247, 238, 0.9);
+  border-color: var(--success-border);
+  background: var(--success-surface);
 }
 
 .question-card.selected {
-  border-color: rgba(40, 40, 40, 0.4);
-  background: rgba(245, 245, 245, 0.95);
+  border-color: var(--selected-border);
+  background: var(--selected-surface);
 }
 
 .question-name {
@@ -421,8 +435,8 @@
 .session-item {
   border-radius: 20px;
   padding: 14px 16px;
-  border: 1px solid rgba(60, 60, 60, 0.12);
-  background: rgba(248, 248, 248, 0.9);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -466,8 +480,8 @@
 .empty-state {
   border-radius: 20px;
   padding: 18px;
-  background: rgba(250, 250, 250, 0.9);
-  border: 1px dashed rgba(60, 60, 60, 0.2);
+  background: var(--surface-muted-4);
+  border: 1px dashed var(--border-stronger);
   color: var(--ink-500);
 }
 
@@ -497,8 +511,8 @@
   margin-top: 16px;
   overflow-x: auto;
   border-radius: 18px;
-  border: 1px solid rgba(60, 60, 60, 0.12);
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
 }
 
 .weightage-table {
@@ -515,38 +529,38 @@
 }
 
 .weightage-entry-card {
-  border: 1px solid rgba(60, 60, 60, 0.16);
-  border-left: 4px solid rgba(60, 60, 60, 0.16);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--border-strong);
   border-radius: 16px;
   padding: 14px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface);
   display: grid;
   gap: 12px;
 }
 
 .weightage-entry-card.weightage-speaking {
-  border-left-color: #c88543;
-  background: #fff6ec;
+  border-left-color: var(--weightage-speaking-border);
+  background: var(--weightage-speaking-bg);
 }
 
 .weightage-entry-card.weightage-writing {
-  border-left-color: #6c7bb8;
-  background: #f3f6ff;
+  border-left-color: var(--weightage-writing-border);
+  background: var(--weightage-writing-bg);
 }
 
 .weightage-entry-card.weightage-reading {
-  border-left-color: #6ea95b;
-  background: #f6fff1;
+  border-left-color: var(--weightage-reading-border);
+  background: var(--weightage-reading-bg);
 }
 
 .weightage-entry-card.weightage-listening {
-  border-left-color: #c06a76;
-  background: #fff2f5;
+  border-left-color: var(--weightage-listening-border);
+  background: var(--weightage-listening-bg);
 }
 
 .weightage-entry-card.weightage-total-card {
   border-left-color: var(--ink-900);
-  background: #f3f0f6;
+  background: var(--weightage-total-bg);
 }
 
 .weightage-card-header {
@@ -587,14 +601,14 @@
 }
 
 .weightage-table thead th {
-  background: #f4f0ed;
+  background: var(--table-head);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-600);
   padding: 12px 10px;
-  border-bottom: 1px solid rgba(60, 60, 60, 0.2);
-  border-right: 1px solid rgba(60, 60, 60, 0.12);
+  border-bottom: 1px solid var(--border-stronger);
+  border-right: 1px solid var(--border);
   text-align: center;
 }
 
@@ -604,8 +618,8 @@
 
 .weightage-table td {
   padding: 12px 10px;
-  border-right: 1px solid rgba(60, 60, 60, 0.12);
-  border-bottom: 1px solid rgba(60, 60, 60, 0.12);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   text-align: center;
   color: var(--ink-700);
   font-weight: 500;
@@ -622,23 +636,23 @@
 }
 
 .weightage-row.weightage-speaking td {
-  background: #f6d8b8;
+  background: var(--weightage-row-speaking);
 }
 
 .weightage-row.weightage-writing td {
-  background: #d9e0f1;
+  background: var(--weightage-row-writing);
 }
 
 .weightage-row.weightage-reading td {
-  background: #dff1c8;
+  background: var(--weightage-row-reading);
 }
 
 .weightage-row.weightage-listening td {
-  background: #f3d7dc;
+  background: var(--weightage-row-listening);
 }
 
 .weightage-table tfoot td {
-  background: #f3f0f6;
+  background: var(--table-foot);
   font-weight: 700;
 }
 
@@ -670,8 +684,8 @@
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #111, #444);
-  color: #fff;
+  background: var(--primary-gradient);
+  color: var(--primary-text);
   box-shadow: var(--shadow-soft);
 }
 
@@ -681,13 +695,13 @@
 }
 
 .ghost-button {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(60, 60, 60, 0.16);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   color: var(--ink-700);
 }
 
 .ghost-button:hover {
-  border-color: rgba(40, 40, 40, 0.3);
+  border-color: var(--border-stronger);
   box-shadow: var(--shadow-soft);
 }
 
@@ -698,8 +712,8 @@ input[type='date'] {
   width: 100%;
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(60, 60, 60, 0.16);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-soft);
   font-size: 0.95rem;
 }
 
