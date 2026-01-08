@@ -230,10 +230,16 @@ const questionTypeNameToId = new Map(
   )
 );
 
+const questionTypeAliases = new Map([
+  ['essay', 'write-essay'],
+]);
+
 const weightageEntries = weightageChart
   .map((entry) => ({
     ...entry,
-    questionTypeId: questionTypeNameToId.get(normalizeQuestionName(entry.question)),
+    questionTypeId:
+      questionTypeNameToId.get(normalizeQuestionName(entry.question)) ||
+      questionTypeAliases.get(normalizeQuestionName(entry.question)),
   }))
   .map((entry) => ({
     ...entry,
