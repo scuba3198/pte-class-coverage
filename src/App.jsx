@@ -852,6 +852,7 @@ function App() {
           Question types sourced from Pearson PTE Academic test format pages. Keep an eye on updates
           from Pearson for any changes.
         </p>
+        <p>Independent project (personal use). Not an official institute product.</p>
       </footer>
     </div>
   );
