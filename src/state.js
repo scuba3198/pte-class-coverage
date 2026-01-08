@@ -418,6 +418,7 @@ export const getAllQuestionTypes = () => modules.flatMap((module) => module.ques
 
 const forcedEntriesBySkill = {
   writing: new Set([normalizeQuestionName('Summarize Spoken Text')]),
+  listening: new Set([normalizeQuestionName('Highlight Incorrect Words')]),
 };
 
 const getTopEntriesForSkillTarget = (skill, target = 72) => {
