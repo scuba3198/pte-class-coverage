@@ -224,23 +224,44 @@ const questionTypeIdToModuleId = new Map(
 const questionTypeNameToId = new Map(
   modules.flatMap((module) =>
     module.questionTypes.map((questionType) => [
-      normalizeQuestionName(questionType.name),
+      `${normalizeQuestionName(questionType.name)}|${module.id}`,
       questionType.id,
     ])
   )
 );
 
 const questionTypeAliases = new Map([
-  ['essay', 'write-essay'],
+  ['essay|writing', 'write-essay'],
+  ['mcqmultiple|reading', 'reading-mcma'],
+  ['mcqsingle|reading', 'reading-mcsa'],
+  ['fillintheblanksdragdrop|reading', 'reading-fill-blanks-drag'],
+  ['mcqmultiple|listening', 'listening-mcma'],
+  ['mcqsingle|listening', 'listening-mcsa'],
+  ['fillintheblanks|listening', 'listening-fill-blanks'],
+  ['selectmissiongword|listening', 'select-missing-word'],
 ]);
+
+const moduleNameToId = {
+  Speaking: 'speaking',
+  Writing: 'writing',
+  Reading: 'reading',
+  Listening: 'listening',
+};
 
 const weightageEntries = weightageChart
   .map((entry) => ({
     ...entry,
-    questionTypeId:
-      questionTypeNameToId.get(normalizeQuestionName(entry.question)) ||
-      questionTypeAliases.get(normalizeQuestionName(entry.question)),
+    questionTypeId: null,
   }))
+  .map((entry) => {
+    const moduleId = moduleNameToId[entry.module] || 'speaking';
+    const key = `${normalizeQuestionName(entry.question)}|${moduleId}`;
+    const questionTypeId = questionTypeNameToId.get(key) || questionTypeAliases.get(key);
+    return {
+      ...entry,
+      questionTypeId,
+    };
+  })
   .map((entry) => ({
     ...entry,
     originModuleId: entry.questionTypeId
