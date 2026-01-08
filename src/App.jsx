@@ -280,7 +280,9 @@ function App() {
         <div className="brand">
           <div className="brand-mark">K</div>
           <div>
-            <p className="brand-overline">KIEC PTE Tracker</p>
+            <p className="brand-overline">
+              KIEC PTE Tracker <span className="brand-signature">by Mumukshu D.C</span>
+            </p>
             <h1>Class Coverage Studio</h1>
             <p className="brand-subtitle">
               Track PTE Academic question types by class, module, and session.

@@ -43,6 +43,17 @@
   margin: 0;
 }
 
+.brand-signature {
+  font-family: 'Dancing Script', 'Brush Script MT', cursive;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-style: italic;
+  margin-left: 8px;
+  color: #d77b3e;
+}
+
 .brand h1 {
   margin: 6px 0 4px;
   font-size: clamp(2rem, 3vw, 2.6rem);
