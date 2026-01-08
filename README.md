@@ -1,33 +1,32 @@
 # PTE Class Coverage Studio
 
-Track PTE Academic question types by class, module, and session. Built for teachers who want a quick, visual snapshot of coverage without a spreadsheet.
+A local-first tracker for PTE Academic class coverage. Monitor question types by module, log sessions, and keep everything organized without spreadsheets.
 
-## Highlights
+## Quick links
+
+- Live site: https://scuba3198.github.io/pte-class-coverage/
+- Issues: https://github.com/scuba3198/pte-class-coverage/issues
+
+## What it does
 
 - Coverage map by module and question type (72+ marks focus)
 - Auto-saved session log with date picker
-- One-click export/import backups (JSON)
 - Manage classes: add new ones and remove old ones anytime
-- Local-first storage, no sign-in required
+- Export/import JSON backups
+- Works fully offline after first load
 
-## How it works
+## How to use
 
-- Pick a class and module tab (Speaking, Writing, Reading, Listening).
-- Toggle question types as you cover them in class.
-- Use the Session Log to record what you practiced today.
-- Optionally auto-mark coverage when you log sessions.
-
-## Manage classes
-
-- Add a class name to create a new class roster.
-- Remove a class to delete its coverage and session history.
-- At least one class is always kept to avoid empty state issues.
+1. Choose a class and a module tab (Speaking, Writing, Reading, Listening).
+2. Toggle question types as you cover them in class.
+3. Use the Session Log to record what you practiced today.
+4. Optionally auto-mark coverage when you log sessions.
 
 ## Data and backups
 
-- Data is stored in `localStorage` for the current browser only.
+- Data lives in `localStorage` for the current browser only.
 - Export a JSON backup before clearing browser data or switching devices.
-- Import a backup to restore everything (classes, coverage, sessions).
+- Import a backup to restore classes, coverage, and sessions.
 
 ## Development
 
