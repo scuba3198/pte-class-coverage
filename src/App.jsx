@@ -437,23 +437,33 @@ function App() {
               </label>
             </div>
             <div className="question-grid compact">
-              {activeModule.questionTypes.map((questionType) => (
-                <button
-                  key={questionType.id}
-                  className={
-                    sessionSelection.includes(questionType.id)
-                      ? 'question-card selected'
-                      : 'question-card'
-                  }
-                  type="button"
-                  onClick={() => toggleSessionItem(questionType.id)}
-                >
-                  <span className="question-name">{questionType.name}</span>
-                  <span className="question-status">
-                    {sessionSelection.includes(questionType.id) ? 'Included' : 'Tap to add'}
-                  </span>
-                </button>
-              ))}
+              {coverageEntries.map((entry) => {
+                const originModuleId =
+                  entry.originModuleId || getModuleIdByQuestionTypeId(entry.questionTypeId);
+                const moduleInitials = {
+                  speaking: 'S',
+                  writing: 'W',
+                  reading: 'R',
+                  listening: 'L',
+                };
+                const originSuffix =
+                  originModuleId && originModuleId !== activeModuleId
+                    ? ` (${moduleInitials[originModuleId] || '?'})`
+                    : '';
+                const isSelected = sessionSelection.includes(entry.questionTypeId);
+
+                return (
+                  <button
+                    key={`${entry.questionTypeId}-${activeModuleId}-session`}
+                    className={isSelected ? 'question-card selected' : 'question-card'}
+                    type="button"
+                    onClick={() => toggleSessionItem(entry.questionTypeId)}
+                  >
+                    <span className="question-name">{`${entry.question}${originSuffix}`}</span>
+                    <span className="question-status">{isSelected ? 'Included' : 'Tap to add'}</span>
+                  </button>
+                );
+              })}
             </div>
             <button className="primary-button" type="button" onClick={saveSession}>
               Save session
