@@ -396,15 +396,16 @@ function App() {
                 const isCovered = coverageForClass[entry.questionTypeId];
 
                 return (
-                <button
-                  key={`${entry.questionTypeId}-${activeModuleId}`}
-                  className={isCovered ? 'question-card covered' : 'question-card'}
-                  type="button"
-                  onClick={() => toggleCoverage(entry.questionTypeId)}
-                >
-                  <span className="question-name">{`${entry.question}${originSuffix}`}</span>
-                  <span className="question-status">{isCovered ? 'Covered' : 'Not yet'}</span>
-                </button>
+                  <button
+                    key={`${entry.questionTypeId}-${activeModuleId}`}
+                    className={isCovered ? 'question-card covered' : 'question-card'}
+                    type="button"
+                    onClick={() => toggleCoverage(entry.questionTypeId)}
+                  >
+                    <span className="question-name">{`${entry.question}${originSuffix}`}</span>
+                    <span className="question-status">{isCovered ? 'Covered' : 'Not yet'}</span>
+                    <span className="question-status">{`${entry.scores[activeSkill]} marks`}</span>
+                  </button>
                 );
               })}
             </div>
