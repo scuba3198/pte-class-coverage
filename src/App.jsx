@@ -543,51 +543,48 @@ function App() {
                 </p>
               </div>
             </div>
-            <div className="weightage-table">
-              <div className="weightage-row weightage-head">
-                <span>Question type</span>
-                <span>Avg Qs</span>
-                <span>Listening</span>
-                <span>Speaking</span>
-                <span>Reading</span>
-                <span>Writing</span>
-                <span>Total</span>
-              </div>
-              {weightageChart.map((entry) => (
-                <div key={`${entry.question}-${entry.module}`} className="weightage-row">
-                  <div>
-                    <p className="weightage-question">{entry.question}</p>
-                    <p className="weightage-module">{entry.module}</p>
-                  </div>
-                  <span data-label="Avg Qs">{entry.avgQs}</span>
-                  <span data-label="Listening">
-                    {entry.scores.listening ? entry.scores.listening.toFixed(2) : '—'}
-                  </span>
-                  <span data-label="Speaking">
-                    {entry.scores.speaking ? entry.scores.speaking.toFixed(2) : '—'}
-                  </span>
-                  <span data-label="Reading">
-                    {entry.scores.reading ? entry.scores.reading.toFixed(2) : '—'}
-                  </span>
-                  <span data-label="Writing">
-                    {entry.scores.writing ? entry.scores.writing.toFixed(2) : '—'}
-                  </span>
-                  <span className="weightage-total" data-label="Total">
-                    {entry.total.toFixed(2)}
-                  </span>
-                </div>
-              ))}
-              <div className="weightage-row weightage-foot">
-                <span>Totals</span>
-                <span data-label="Avg Qs">—</span>
-                <span data-label="Listening">{weightageTotals.listening.toFixed(2)}</span>
-                <span data-label="Speaking">{weightageTotals.speaking.toFixed(2)}</span>
-                <span data-label="Reading">{weightageTotals.reading.toFixed(2)}</span>
-                <span data-label="Writing">{weightageTotals.writing.toFixed(2)}</span>
-                <span className="weightage-total" data-label="Total">
-                  {weightageTotals.total.toFixed(2)}
-                </span>
-              </div>
+            <div className="weightage-table-wrap">
+              <table className="weightage-table">
+                <thead>
+                  <tr>
+                    <th>Module</th>
+                    <th>Weightage-wise Sequence of Questions</th>
+                    <th>Avg Qs</th>
+                    <th>Listening</th>
+                    <th>Speaking</th>
+                    <th>Reading</th>
+                    <th>Writing</th>
+                    <th>Total Marks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weightageChart.map((entry) => (
+                    <tr
+                      key={`${entry.question}-${entry.module}`}
+                      className={`weightage-row weightage-${entry.module.toLowerCase()}`}
+                    >
+                      <td className="weightage-module-cell">{entry.module}</td>
+                      <td className="weightage-question-cell">{entry.question}</td>
+                      <td className="weightage-avg">{entry.avgQs}</td>
+                      <td>{entry.scores.listening ? entry.scores.listening.toFixed(2) : ''}</td>
+                      <td>{entry.scores.speaking ? entry.scores.speaking.toFixed(2) : ''}</td>
+                      <td>{entry.scores.reading ? entry.scores.reading.toFixed(2) : ''}</td>
+                      <td>{entry.scores.writing ? entry.scores.writing.toFixed(2) : ''}</td>
+                      <td className="weightage-total">{entry.total.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="weightage-foot">
+                    <td colSpan="3" />
+                    <td>{weightageTotals.listening.toFixed(2)}</td>
+                    <td>{weightageTotals.speaking.toFixed(2)}</td>
+                    <td>{weightageTotals.reading.toFixed(2)}</td>
+                    <td>{weightageTotals.writing.toFixed(2)}</td>
+                    <td className="weightage-total">{weightageTotals.total.toFixed(2)}</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
             <p className="backup-note">
               Source: New Score Weightage Chart in the AlfaPTE guide (Aug 7, 2025 update).
