@@ -416,17 +416,26 @@ export const getQuestionTypeById = (questionTypeId) =>
 
 export const getAllQuestionTypes = () => modules.flatMap((module) => module.questionTypes);
 
+const forcedEntriesBySkill = {
+  writing: new Set([normalizeQuestionName('Summarize Spoken Text')]),
+};
+
 const getTopEntriesForSkillTarget = (skill, target = 72) => {
+  const forcedNames = forcedEntriesBySkill[skill] || new Set();
+  const forcedEntries = weightageEntries.filter((entry) =>
+    forcedNames.has(normalizeQuestionName(entry.question))
+  );
   const entries = weightageEntries
     .filter((entry) => entry.scores[skill])
+    .filter((entry) => !forcedNames.has(normalizeQuestionName(entry.question)))
     .sort((a, b) => b.scores[skill] - a.scores[skill]);
 
   if (!entries.length) {
-    return [];
+    return forcedEntries;
   }
 
-  const result = [];
-  let runningTotal = 0;
+  const result = [...forcedEntries];
+  let runningTotal = forcedEntries.reduce((sum, entry) => sum + (entry.scores[skill] || 0), 0);
 
   for (const entry of entries) {
     result.push(entry);
