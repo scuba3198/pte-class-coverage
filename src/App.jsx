@@ -149,8 +149,11 @@ function App() {
   }, [coverageQuestionTypeIds, coverageForClass]);
 
   useEffect(() => {
-    setSessionSelection([]);
-  }, [activeClassId, activeModuleId]);
+    const existingSession = sessionsForClass.find(
+      (entry) => entry.date === sessionDate && entry.moduleId === activeModuleId
+    );
+    setSessionSelection(existingSession ? [...existingSession.questionTypeIds] : []);
+  }, [activeClassId, activeModuleId, sessionDate, sessionsForClass]);
 
   const toggleCoverage = (questionTypeId) => {
     updateState((prevState) => {
@@ -162,43 +165,53 @@ function App() {
   };
 
   const toggleSessionItem = (questionTypeId) => {
-    setSessionSelection((prev) =>
-      prev.includes(questionTypeId)
+    setSessionSelection((prev) => {
+      const nextSelection = prev.includes(questionTypeId)
         ? prev.filter((id) => id !== questionTypeId)
-        : [...prev, questionTypeId]
-    );
-  };
+        : [...prev, questionTypeId];
 
-  const saveSession = () => {
-    if (!sessionSelection.length) {
-      return;
-    }
+      updateState((prevState) => {
+        const nextState = normalizeState(prevState);
+        const sessions = nextState.sessions[activeClassId];
+        const existingIndex = sessions.findIndex(
+          (entry) => entry.date === sessionDate && entry.moduleId === activeModuleId
+        );
 
-    updateState((prevState) => {
-      const nextState = normalizeState(prevState);
-      const sessionEntry = {
-        id: createSessionId(),
-        date: sessionDate,
-        moduleId: activeModuleId,
-        questionTypeIds: [...sessionSelection],
-        note: '',
-      };
+        if (!nextSelection.length) {
+          if (existingIndex !== -1) {
+            sessions.splice(existingIndex, 1);
+          }
+          return nextState;
+        }
 
-      nextState.sessions[activeClassId] = [
-        ...nextState.sessions[activeClassId],
-        sessionEntry,
-      ].sort((a, b) => a.date.localeCompare(b.date));
+        const sessionId = existingIndex !== -1 ? sessions[existingIndex].id : createSessionId();
+        const sessionEntry = {
+          id: sessionId,
+          date: sessionDate,
+          moduleId: activeModuleId,
+          questionTypeIds: [...nextSelection],
+          note: '',
+        };
 
-      if (applyToCoverage) {
-        sessionSelection.forEach((questionTypeId) => {
-          nextState.coverage[activeClassId][questionTypeId] = true;
-        });
-      }
+        if (existingIndex !== -1) {
+          sessions[existingIndex] = sessionEntry;
+        } else {
+          sessions.push(sessionEntry);
+        }
 
-      return nextState;
+        sessions.sort((a, b) => a.date.localeCompare(b.date));
+
+        if (applyToCoverage) {
+          nextSelection.forEach((selectedId) => {
+            nextState.coverage[activeClassId][selectedId] = true;
+          });
+        }
+
+        return nextState;
+      });
+
+      return nextSelection;
     });
-
-    setSessionSelection([]);
   };
 
   const deleteSession = (sessionId) => {
@@ -425,8 +438,8 @@ function App() {
             <div className="card-header">
               <div>
                 <p className="section-label">Session log</p>
-                <h2>Add a session</h2>
-                <p className="card-subtitle">Record what you covered today.</p>
+                <h2>Auto-saved session</h2>
+                <p className="card-subtitle">Selections update your session instantly.</p>
               </div>
             </div>
             <div className="session-controls">
@@ -476,9 +489,6 @@ function App() {
                 );
               })}
             </div>
-            <button className="primary-button" type="button" onClick={saveSession}>
-              Save session
-            </button>
           </div>
 
           <div className="card log-card">
@@ -559,28 +569,24 @@ function App() {
               <div>
                 <p className="section-label">Help</p>
                 <h2>How to use this tracker</h2>
-                <p className="card-subtitle">A quick guide for smooth day-to-day tracking.</p>
+                <p className="card-subtitle">A quick guide for students and teachers.</p>
               </div>
             </div>
             <div className="help-list">
               <p>
-                1. Choose a class at the top, then pick a module tab (Speaking, Writing, Reading,
-                Listening).
+                1. Choose your class, then pick a module tab (Speaking, Writing, Reading, Listening).
               </p>
               <p>
-                2. The coverage grid only shows the highest-impact tasks that reach 72+ marks for
-                that module.
+                2. The coverage grid shows only the top tasks that reach 72+ marks for that module.
               </p>
               <p>
-                3. Tap a pill to mark it Covered. The label shows how many marks that task carries
-                for the current module.
+                3. Tap a pill to mark it Covered. Each pill shows the marks it adds for that module.
               </p>
               <p>
-                4. Use the session log to record what you taught today. The list matches the
-                coverage grid.
+                4. Use the session log to record what you practiced today. It auto-saves as you tap.
               </p>
               <p>
-                5. Cross-module tasks show a badge like (S/W/R/L) to indicate the original section.
+                5. Cross-module tasks show a badge like (S/W/R/L) to show the original section.
               </p>
               <p>
                 6. Export a backup regularly if you might clear browser data or switch devices.
