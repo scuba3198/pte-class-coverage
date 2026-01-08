@@ -203,6 +203,13 @@
   margin-top: 16px;
 }
 
+.add-class-button {
+  width: fit-content;
+  padding: 10px 16px;
+  justify-self: start;
+  align-self: end;
+}
+
 .class-chip {
   border: 1px solid rgba(60, 60, 60, 0.16);
   border-radius: 999px;

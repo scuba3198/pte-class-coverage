@@ -409,14 +409,20 @@ function App() {
                 placeholder="e.g., 11-12"
               />
             </label>
-            <button className="primary-button" type="submit">
+            <button className="primary-button add-class-button" type="submit">
               Add class
             </button>
           </form>
           <div className="class-list class-list-editor">
             {state.classes.map((classItem) => (
-              <div key={classItem.id} className="class-chip class-chip-manage">
-                <span>{classItem.name}</span>
+              <div key={classItem.id} className="class-chip-manage">
+                <button
+                  className={classItem.id === activeClassId ? 'class-chip active' : 'class-chip'}
+                  type="button"
+                  onClick={() => setActiveClassId(classItem.id)}
+                >
+                  {classItem.name}
+                </button>
                 <button
                   className="ghost-button"
                   type="button"
