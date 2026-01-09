@@ -120,15 +120,33 @@
 .theme-toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: var(--surface-soft);
+  justify-content: flex-end;
 }
 
-.theme-toggle .ghost-button {
-  padding: 8px 14px;
+.theme-toggle-button {
+  border-radius: 999px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--ink-700);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.theme-toggle-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-deep);
+  border-color: var(--border-stronger);
+}
+
+.theme-toggle-icon {
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .auth-label {

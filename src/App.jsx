@@ -408,13 +408,15 @@ function App() {
             </div>
           </div>
           <div className="theme-toggle">
-            <p className="auth-label">Theme</p>
             <button
-              className="ghost-button"
+              className="theme-toggle-button"
               type="button"
               onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+              aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
             >
-              {theme === 'light' ? 'Switch to dark' : 'Switch to light'}
+              <span className="theme-toggle-icon" aria-hidden="true">
+                {theme === 'light' ? '☀' : '☾'}
+              </span>
             </button>
           </div>
         </div>
