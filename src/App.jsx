@@ -552,7 +552,7 @@ function App() {
               <div>
                 <p className="section-label">Session log</p>
                 <h2>Auto-saved session</h2>
-                <p className="card-subtitle">Selections update your session instantly.</p>
+                <p className="card-subtitle">Add what you learned in class today.</p>
               </div>
             </div>
             <div className="module-tabs">
