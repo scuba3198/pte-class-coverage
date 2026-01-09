@@ -397,16 +397,6 @@ function App() {
           </div>
         </div>
         <div className="auth-panel">
-          <div className="sync-pill sync-synced">
-            <span className="sync-dot" />
-            Saved locally
-          </div>
-          <div className="auth-signed-in">
-            <div>
-              <p className="auth-label">Storage</p>
-              <p className="auth-value">Local browser storage</p>
-            </div>
-          </div>
           <div className="theme-toggle">
             <button
               className="theme-toggle-button"
