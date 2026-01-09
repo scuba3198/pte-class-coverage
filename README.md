@@ -48,6 +48,12 @@ Lint:
 npm run lint
 ```
 
+Test:
+
+```bash
+npm test
+```
+
 Build:
 
 ```bash
