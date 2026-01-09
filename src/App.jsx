@@ -113,6 +113,12 @@ function App() {
   }, [state]);
 
   useEffect(() => {
+    if (!state.classes.some((classItem) => classItem.id === activeClassId)) {
+      setActiveClassId(state.classes[0]?.id || defaultClassId);
+    }
+  }, [activeClassId, state.classes]);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
       window.localStorage.setItem(THEME_KEY, theme);
