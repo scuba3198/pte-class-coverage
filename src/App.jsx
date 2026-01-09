@@ -276,12 +276,21 @@ function App() {
       return;
     }
 
-    const classId = `class-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const defaultMatch = classDefaults.find((classItem) => classItem.name === name);
+    const classId = defaultMatch && !stateRef.current.classes.some((item) => item.id === defaultMatch.id)
+      ? defaultMatch.id
+      : `class-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const questionTypeIds = getAllQuestionTypes().map((item) => item.id);
 
     updateState((prevState) => {
       const nextState = normalizeState(prevState);
       nextState.classes = [...nextState.classes, { id: classId, name }];
+      const defaultOrder = classDefaults.map((classItem) => classItem.id);
+      const defaultsInOrder = defaultOrder
+        .map((id) => nextState.classes.find((classItem) => classItem.id === id))
+        .filter(Boolean);
+      const customClasses = nextState.classes.filter((classItem) => !defaultOrder.includes(classItem.id));
+      nextState.classes = [...defaultsInOrder, ...customClasses];
       nextState.coverage[classId] = {};
       questionTypeIds.forEach((questionTypeId) => {
         nextState.coverage[classId][questionTypeId] = false;
