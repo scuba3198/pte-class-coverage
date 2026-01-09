@@ -555,6 +555,18 @@ function App() {
                 <p className="card-subtitle">Selections update your session instantly.</p>
               </div>
             </div>
+            <div className="module-tabs">
+              {modules.map((module) => (
+                <button
+                  key={`session-${module.id}`}
+                  className={module.id === activeModuleId ? 'module-tab active' : 'module-tab'}
+                  type="button"
+                  onClick={() => setActiveModuleId(module.id)}
+                >
+                  {module.name}
+                </button>
+              ))}
+            </div>
             <div className="session-controls">
               <label>
                 Date
