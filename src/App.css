@@ -510,6 +510,8 @@
 .weightage-table-wrap {
   margin-top: 16px;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 420px;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: var(--surface-strong);
