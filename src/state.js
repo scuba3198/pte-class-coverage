@@ -306,25 +306,19 @@ const normalizeClasses = (classes) => {
     return fallback;
   }
 
+  const defaultNameById = new Map(classDefaults.map((classItem) => [classItem.id, classItem.name]));
   const normalized = [];
   const seen = new Set();
-
-  classDefaults.forEach((classItem) => {
-    const existing = classes.find((item) => item && item.id === classItem.id);
-    normalized.push(
-      existing ? { ...classItem, name: existing.name || classItem.name } : { ...classItem }
-    );
-    seen.add(classItem.id);
-  });
 
   classes.forEach((classItem) => {
     if (!classItem || typeof classItem !== 'object') {
       return;
     }
-    if (!classItem.id || !classItem.name || seen.has(classItem.id)) {
+    const name = classItem.name || defaultNameById.get(classItem.id);
+    if (!classItem.id || !name || seen.has(classItem.id)) {
       return;
     }
-    normalized.push({ id: classItem.id, name: classItem.name });
+    normalized.push({ id: classItem.id, name });
     seen.add(classItem.id);
   });
 
