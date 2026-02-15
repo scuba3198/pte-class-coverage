@@ -1,6 +1,6 @@
 # PTE Class Coverage Studio
 
-A local-first tracker for PTE Academic class coverage. Monitor question types by module, log sessions, and keep everything organized without spreadsheets.
+A local-first tracker for PTE Academic class coverage. Monitor question types by module, log sessions, and keep everything organized without spreadsheets. Now built with TypeScript for better reliability.
 
 ## Quick links
 
@@ -52,6 +52,12 @@ Test:
 
 ```bash
 npm test
+```
+
+Type check:
+
+```bash
+npm run typecheck
 ```
 
 Build:
