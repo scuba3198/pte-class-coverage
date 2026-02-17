@@ -24,7 +24,6 @@ interface AppContextValue {
     manageClass: (action: ClassAction) => Promise<void>;
     exportData: (filename: string) => Promise<void>;
     importData: (jsonData: string) => Promise<Result<void>>;
-    importData: (jsonData: string) => Promise<Result<void>>;
     refreshState: () => Promise<void>;
     toggleTheme: () => void;
   };
@@ -38,13 +37,14 @@ export const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(buildDefaultState());
-  const [state, setState] = useState<AppState>(buildDefaultState());
   const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined" && window.localStorage) {
       const stored = window.localStorage.getItem("pte-tracker-theme");
       if (stored === "light" || stored === "dark") return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        return "dark";
+      return "light";
     }
     return "light";
   });
@@ -124,22 +124,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { ok: false, error: result.error };
     },
-  },
-    refreshState,
     toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
   };
 
-const value = useMemo(
-  () => ({
-    state,
-    isLoading,
-    state,
-    isLoading,
-    theme,
-    actions: wrappedActions as any, // Simplified for brevity in this step
-  }),
-  [state, isLoading, wrappedActions],
-);
+  const value = useMemo(
+    () => ({
+      state,
+      isLoading,
+      theme,
+      actions: wrappedActions as any, // Simplified for brevity in this step
+    }),
+    [state, isLoading, wrappedActions],
+  );
 
-return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

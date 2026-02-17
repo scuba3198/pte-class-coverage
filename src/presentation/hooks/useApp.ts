@@ -115,7 +115,6 @@ export const useApp = () => {
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,
-      exportData: actions.exportData,
       importData: actions.importData,
       toggleTheme: actions.toggleTheme,
     },
