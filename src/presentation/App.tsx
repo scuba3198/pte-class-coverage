@@ -27,7 +27,6 @@ const App: React.FC = () => {
     coverageCounts,
     moduleCoverageCounts,
     coverageMarksTotal,
-    coverageMarksTotal,
     handlers,
     theme,
   } = useApp();
