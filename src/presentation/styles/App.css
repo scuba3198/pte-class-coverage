@@ -761,7 +761,6 @@ footer {
 }
 
 @media (max-width: 900px) {
-
   /* Changed .app-header to just .app-header for consistency if needed, but original used block nesting */
   .app-header {
     flex-direction: column;
