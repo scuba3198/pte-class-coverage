@@ -49,7 +49,10 @@ const App: React.FC = () => {
               <img src={viteLogo} alt="PTE" />
             </div>
             <div className="brand-text">
-              <h1>PTE Class Coverage</h1>
+              <h1>
+                PTE Class Coverage
+                <span className="brand-signature">by Mumukshu D.C</span>
+              </h1>
               <p className="brand-overline">Academic Score Tracker</p>
             </div>
           </div>
