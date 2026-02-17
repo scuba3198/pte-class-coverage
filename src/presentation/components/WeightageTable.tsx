@@ -31,6 +31,76 @@ export const WeightageTable: React.FC = () => {
           </p>
         </div>
       </div>
+      <div className="weightage-cards">
+        {weightageChart.map((entry) => (
+          <div
+            key={`${entry.question}-${entry.module}`}
+            className="card"
+            style={{ marginBottom: "1rem" }}
+          >
+            <div style={{ padding: "16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  className={`weightage-module-cell weightage-row weightage-${entry.module.toLowerCase()}`}
+                  style={{
+                    fontSize: "0.75rem",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    background: `var(--weightage-row-${entry.module.toLowerCase()})`,
+                  }}
+                >
+                  {entry.module}
+                </span>
+                <span className="weightage-card-value">{entry.total.toFixed(2)} pts</span>
+              </div>
+
+              <div className="weightage-card-question" style={{ marginBottom: "12px" }}>
+                {entry.question}
+              </div>
+
+              <div className="weightage-card-grid">
+                <div>
+                  <span className="weightage-card-label">Avg Qs</span>
+                  <span className="weightage-card-value">{entry.avgQs}</span>
+                </div>
+                {entry.scores.speaking ? (
+                  <div>
+                    <span className="weightage-card-label">Speaking</span>
+                    <span className="weightage-card-value">{entry.scores.speaking.toFixed(2)}</span>
+                  </div>
+                ) : null}
+                {entry.scores.writing ? (
+                  <div>
+                    <span className="weightage-card-label">Writing</span>
+                    <span className="weightage-card-value">{entry.scores.writing.toFixed(2)}</span>
+                  </div>
+                ) : null}
+                {entry.scores.reading ? (
+                  <div>
+                    <span className="weightage-card-label">Reading</span>
+                    <span className="weightage-card-value">{entry.scores.reading.toFixed(2)}</span>
+                  </div>
+                ) : null}
+                {entry.scores.listening ? (
+                  <div>
+                    <span className="weightage-card-label">Listening</span>
+                    <span className="weightage-card-value">
+                      {entry.scores.listening.toFixed(2)}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
       <div className="weightage-table-wrap">
         <table className="weightage-table">
           <thead>
