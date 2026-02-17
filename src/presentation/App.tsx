@@ -8,6 +8,7 @@ import { ClassEditor } from "./components/ClassEditor";
 import { BackupCard } from "./components/BackupCard";
 import { HelpCard } from "./components/HelpCard";
 import { WeightageTable } from "./components/WeightageTable";
+import viteLogo from "../assets/vite.svg";
 import "./styles/App.css";
 
 const App: React.FC = () => {
@@ -45,7 +46,7 @@ const App: React.FC = () => {
         <div className="header-content">
           <div className="brand">
             <div className="brand-mark">
-              <img src="/vite.svg" alt="PTE" />
+              <img src={viteLogo} alt="PTE" />
             </div>
             <div className="brand-text">
               <h1>PTE Class Coverage</h1>
