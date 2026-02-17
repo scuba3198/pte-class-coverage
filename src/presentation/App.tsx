@@ -83,6 +83,14 @@ const App: React.FC = () => {
 
         <div className="main-grid">
           <div className="primary-column">
+            <ClassEditor
+              classes={state.classes}
+              activeClassId={activeClass.id}
+              onAddClass={(name) => handlers.manageClass({ type: "ADD_CLASS", name })}
+              onRemoveClass={(id) => handlers.manageClass({ type: "REMOVE_CLASS", classId: id })}
+              onSelectClass={handlers.setActiveClassId}
+            />
+
             <CoverageCard
               activeClassName={activeClass.name}
               activeModule={activeModule}
@@ -131,14 +139,6 @@ const App: React.FC = () => {
                   sessionId,
                 })
               }
-            />
-
-            <ClassEditor
-              classes={state.classes}
-              activeClassId={activeClass.id}
-              onAddClass={(name) => handlers.manageClass({ type: "ADD_CLASS", name })}
-              onRemoveClass={(id) => handlers.manageClass({ type: "REMOVE_CLASS", classId: id })}
-              onSelectClass={handlers.setActiveClassId}
             />
 
             <BackupCard
