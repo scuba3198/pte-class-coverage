@@ -1,0 +1,53 @@
+{
+  "forbidden": [
+    {
+      "name": "domain-internal-only",
+      "comment": "Domain must not import from any other layer",
+      "severity": "error",
+      "from": {
+        "path": "^src/domain"
+      },
+      "to": {
+        "path": "^src/(infrastructure|application|presentation)"
+      }
+    },
+    {
+      "name": "infrastructure-separation",
+      "comment": "Infrastructure should not import from application or presentation",
+      "severity": "error",
+      "from": {
+        "path": "^src/infrastructure"
+      },
+      "to": {
+        "path": "^src/(application|presentation)"
+      }
+    },
+    {
+      "name": "application-layer-rules",
+      "comment": "Application layer should not import from presentation",
+      "severity": "error",
+      "from": {
+        "path": "^src/application"
+      },
+      "to": {
+        "path": "^src/presentation"
+      }
+    },
+    {
+      "name": "no-circular-dependencies",
+      "severity": "error",
+      "from": {},
+      "to": {
+        "circular": true
+      }
+    }
+  ],
+  "options": {
+    "doNotFollow": {
+      "dependencyTypes": ["npm", "npm-dev", "npm-optional", "npm-peer"]
+    },
+    "tsConfig": {
+      "fileName": "tsconfig.app.json"
+    }
+  }
+}

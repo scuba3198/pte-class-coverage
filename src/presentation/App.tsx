@@ -1,0 +1,142 @@
+import React from "react";
+import { useApp } from "./hooks/useApp";
+import { ClassBar } from "./components/ClassBar";
+import { CoverageCard } from "./components/CoverageCard";
+import { SessionCard } from "./components/SessionCard";
+import { SessionHistory } from "./components/SessionHistory";
+import { ClassEditor } from "./components/ClassEditor";
+import { BackupCard } from "./components/BackupCard";
+import { HelpCard } from "./components/HelpCard";
+import { WeightageTable } from "./components/WeightageTable";
+import "./styles/App.css";
+
+const App: React.FC = () => {
+  const {
+    state,
+    isLoading,
+    activeClass,
+    activeModule,
+    activeSkill,
+    sessionDate,
+    applyToCoverage,
+    modules,
+    coverageForClass,
+    coverageEntries,
+    currentSessions,
+    activeSessionSelection,
+    coverageCounts,
+    moduleCoverageCounts,
+    coverageMarksTotal,
+    handlers,
+  } = useApp();
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <p>Loading PTE Tracker...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-container">
+      <header className="app-header">
+        <div className="header-content">
+          <div className="header-logo">
+            <h1>PTE Class Coverage</h1>
+            <span className="badge">Tracker</span>
+          </div>
+          <p className="header-tagline">Visual progress tracking for PTE students.</p>
+        </div>
+      </header>
+
+      <main className="main-content">
+        <ClassBar
+          classes={state.classes}
+          activeClassId={activeClass.id}
+          onSelectClass={handlers.setActiveClassId}
+          onResetClass={() =>
+            handlers.manageClass({ type: "RESET_CLASS", classId: activeClass.id })
+          }
+        />
+
+        <div className="main-grid">
+          <div className="primary-column">
+            <CoverageCard
+              activeClassName={activeClass.name}
+              activeModule={activeModule}
+              activeSkill={activeSkill}
+              modules={modules}
+              coverageForClass={coverageForClass}
+              coverageEntries={coverageEntries}
+              coverageMarksTotal={coverageMarksTotal}
+              coverageCounts={coverageCounts}
+              moduleCoverageCounts={moduleCoverageCounts}
+              onSelectModule={handlers.setActiveModuleId}
+              onToggleCoverage={handlers.toggleCoverage}
+            />
+
+            <SessionCard
+              activeModule={activeModule}
+              modules={modules}
+              sessionDate={sessionDate}
+              applyToCoverage={applyToCoverage}
+              sessionSelection={activeSessionSelection}
+              coverageEntries={coverageEntries}
+              onSelectModule={handlers.setActiveModuleId}
+              onSetDate={handlers.setSessionDate}
+              onSetApplyToCoverage={handlers.setApplyToCoverage}
+              onToggleItem={(questionTypeId) =>
+                handlers.manageSession({
+                  type: "TOGGLE_ITEM",
+                  classId: activeClass.id,
+                  date: sessionDate,
+                  moduleId: activeModule.id,
+                  questionTypeId,
+                  applyToCoverage,
+                })
+              }
+            />
+          </div>
+
+          <div className="secondary-column">
+            <SessionHistory
+              activeClassName={activeClass.name}
+              sessions={currentSessions}
+              onDeleteSession={(sessionId) =>
+                handlers.manageSession({
+                  type: "DELETE_SESSION",
+                  classId: activeClass.id,
+                  sessionId,
+                })
+              }
+            />
+
+            <ClassEditor
+              classes={state.classes}
+              activeClassId={activeClass.id}
+              onAddClass={(name) => handlers.manageClass({ type: "ADD_CLASS", name })}
+              onRemoveClass={(id) => handlers.manageClass({ type: "REMOVE_CLASS", classId: id })}
+              onSelectClass={handlers.setActiveClassId}
+            />
+
+            <BackupCard
+              onExport={() => handlers.exportData(`${activeClass.name}-pte-backup.json`)}
+              onImport={handlers.importData}
+            />
+
+            <HelpCard />
+          </div>
+        </div>
+
+        <WeightageTable />
+      </main>
+
+      <footer className="app-footer">
+        <p>© {new Date().getFullYear()} PTE Academic Score Weightage Tracker</p>
+      </footer>
+    </div>
+  );
+};
+
+export default App;

@@ -1,75 +1,76 @@
-# PTE Class Coverage Studio
+# PTE Class Coverage Tracker
 
-A local-first tracker for PTE Academic class coverage. Monitor question types by module, log sessions, and keep everything organized without spreadsheets. Now built with TypeScript for better reliability.
+A modern, type-safe React application for tracking PTE exam preparation class coverage and scores.
 
-## Quick links
+## Architecture
 
-- Live site: https://scuba3198.github.io/pte-class-coverage/
-- Issues: https://github.com/scuba3198/pte-class-coverage/issues
+This project follows a strict **Clean Architecture** with four distinct layers, enforcing unidirectional dependency flow:
 
-## What it does
+```mermaid
+graph TD
+    subgraph Presentation["Presentation Layer (React)"]
+        UI[Components & Pages]
+        Context[AppContext & Hooks]
+    end
 
-- Coverage map by module and question type (72+ marks focus)
-- Auto-saved session log with date picker
-- Manage classes: add new ones and remove old ones anytime
-- Export/import JSON backups
-- Works fully offline after first load
+    subgraph Application["Application Layer (Use Cases)"]
+        UC[Use Cases]
+        Ports[Interfaces]
+    end
 
-## How to use
+    subgraph Domain["Domain Layer (Business Logic)"]
+        Models[Types & Schemas]
+        Logic[Pure Functions]
+        Data[Static Data]
+    end
 
-1. Choose a class and a module tab (Speaking, Writing, Reading, Listening).
-2. Toggle question types as you cover them in class.
-3. Use the Session Log to record what you practiced today.
-4. Optionally auto-mark coverage when you log sessions.
+    subgraph Infrastructure["Infrastructure Layer (External)"]
+        Store[LocalStorage Adapter]
+        Log[Pino Logger]
+    end
 
-## Data and backups
-
-- Data lives in `localStorage` for the current browser only.
-- Export a JSON backup before clearing browser data or switching devices.
-- Import a backup to restore classes, coverage, and sessions.
-
-## Development
-
-Install dependencies:
-
-```bash
-npm install
+    Presentation --> Application
+    Application --> Domain
+    Application --> Infrastructure
+    Infrastructure --> Domain
 ```
 
-Start the dev server:
+### Layers
 
-```bash
-npm run dev
+1.  **Domain**: Pure business logic, Zod schemas, and data structures. Zero external dependencies.
+2.  **Application**: Orchestration of user stories (Use Cases). Defines interfaces for infrastructure.
+3.  **Infrastructure**: Implementation of external services (Storage, Logging).
+4.  **Presentation**: React UI components and state management.
+
+## tech Stack
+
+-   **Framework**: React + Vite
+-   **Language**: TypeScript (Strict Mode)
+-   **Validation**: Zod
+-   **State Management**: React Context + Functional Types (`Result<T>`)
+-   **Linting/Formatting**: oxlint + Prettier
+-   **Testing**: Vitest + React Testing Library + dependency-cruiser
+
+## Scripts
+
+| Command              | Description                                                                 |
+| -------------------- | --------------------------------------------------------------------------- |
+| `npm run dev`        | Start development server                                                    |
+| `npm run build`      | Build for production                                                        |
+| `npm run preview`    | Preview production build                                                    |
+| `npm run check`      | Run full verification suite (Format, Lint, Type-Check, Test, Architecture) |
+| `npm run lint`       | Run oxlint                                                                  |
+| `npm run format`     | Run Prettier                                                                |
+| `npm run test`       | Run Unit & Integration Tests                                                |
+| `npm run type-check` | Run TypeScript Compiler check                                               |
+
+## Project Structure
+
+```text
+src/
+├── domain/           # Pure business logic & types
+├── application/      # Use cases & orchestration
+├── infrastructure/   # External services (Storage, Logger)
+├── presentation/     # React components & styles
+└── main.tsx          # Entry point
 ```
-
-Lint:
-
-```bash
-npm run lint
-```
-
-Test:
-
-```bash
-npm test
-```
-
-Type check:
-
-```bash
-npm run typecheck
-```
-
-Build:
-
-```bash
-npm run build
-```
-
-## References
-
-Question types are based on the official Pearson PTE Academic test format pages:
-
-- https://www.pearsonpte.com/pte-academic/test-format/speaking-writing
-- https://www.pearsonpte.com/pte-academic/test-format/reading
-- https://www.pearsonpte.com/pte-academic/test-format/listening
