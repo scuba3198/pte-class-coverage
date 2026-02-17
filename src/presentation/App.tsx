@@ -27,7 +27,9 @@ const App: React.FC = () => {
     coverageCounts,
     moduleCoverageCounts,
     coverageMarksTotal,
+    coverageMarksTotal,
     handlers,
+    theme,
   } = useApp();
 
   if (isLoading) {
@@ -42,11 +44,27 @@ const App: React.FC = () => {
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
-          <div className="header-logo">
-            <h1>PTE Class Coverage</h1>
-            <span className="badge">Tracker</span>
+          <div className="brand">
+            <div className="brand-mark">
+              <img src="/vite.svg" alt="PTE" />
+            </div>
+            <div className="brand-text">
+              <h1>PTE Class Coverage</h1>
+              <p className="brand-overline">Academic Score Tracker</p>
+            </div>
           </div>
-          <p className="header-tagline">Visual progress tracking for PTE students.</p>
+        </div>
+
+        <div className="auth-panel">
+          <div className="theme-toggle">
+            <button
+              className="theme-toggle-button"
+              onClick={handlers.toggleTheme}
+              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+            >
+              {theme === "light" ? "🌙" : "☀️"}
+            </button>
+          </div>
         </div>
       </header>
 

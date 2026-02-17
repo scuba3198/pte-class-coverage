@@ -17,7 +17,7 @@ export const useApp = () => {
     throw new Error("useApp must be used within an AppProvider");
   }
 
-  const { state, actions, isLoading } = context;
+  const { state, actions, isLoading, theme } = context;
 
   // UI-only state (doesn't need persistence in AppState)
   const [activeClassId, setActiveClassId] = useState(state.classes[0]?.id || "");
@@ -115,7 +115,10 @@ export const useApp = () => {
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,
+      exportData: actions.exportData,
       importData: actions.importData,
+      toggleTheme: actions.toggleTheme,
     },
+    theme,
   };
 };
