@@ -1,4 +1,4 @@
-import type { AppState, Session } from "../types";
+import type { AppState, QuestionTypeId, Session, SessionId } from "../types";
 
 /**
  * Normalizes a question name for lookup (lowercase, alphanumeric only).
@@ -9,11 +9,11 @@ export const normalizeQuestionName = (value: string): string =>
 /**
  * Generates a unique session ID.
  */
-export const createSessionId = (): string => {
+export const createSessionId = (): SessionId => {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
+    return crypto.randomUUID() as SessionId;
   }
-  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}` as SessionId;
 };
 
 /**
@@ -23,7 +23,7 @@ export const createSessionId = (): string => {
 export const mergeStates = (
   remoteState: AppState,
   localState: AppState,
-  allQuestionTypeIds: string[],
+  allQuestionTypeIds: QuestionTypeId[],
 ): AppState => {
   const coverage: AppState["coverage"] = {};
   const sessions: AppState["sessions"] = {};
@@ -37,7 +37,7 @@ export const mergeStates = (
         false;
     });
 
-    const mergedSessions = new Map<string, Session>();
+    const mergedSessions = new Map<SessionId, Session>();
     remoteState.sessions[classItem.id]?.forEach((session) => {
       mergedSessions.set(session.id, session);
     });

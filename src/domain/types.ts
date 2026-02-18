@@ -1,6 +1,30 @@
 import { z } from "zod";
 
 /**
+ * Branded type for Class ID.
+ */
+export const ClassIdSchema = z.string().brand<"ClassId">();
+export type ClassId = z.infer<typeof ClassIdSchema>;
+
+/**
+ * Branded type for Module ID.
+ */
+export const ModuleIdSchema = z.string().brand<"ModuleId">();
+export type ModuleId = z.infer<typeof ModuleIdSchema>;
+
+/**
+ * Branded type for Question Type ID.
+ */
+export const QuestionTypeIdSchema = z.string().brand<"QuestionTypeId">();
+export type QuestionTypeId = z.infer<typeof QuestionTypeIdSchema>;
+
+/**
+ * Branded type for Session ID.
+ */
+export const SessionIdSchema = z.string().brand<"SessionId">();
+export type SessionId = z.infer<typeof SessionIdSchema>;
+
+/**
  * Schema for a single communicative skill.
  */
 export const SkillKeySchema = z.enum(["speaking", "writing", "reading", "listening"]);
@@ -16,7 +40,7 @@ export type SkillScores = z.infer<typeof SkillScoresSchema>;
  * Schema for a single PTE question type.
  */
 export const QuestionTypeSchema = z.object({
-  id: z.string(),
+  id: QuestionTypeIdSchema,
   name: z.string(),
 });
 export type QuestionType = z.infer<typeof QuestionTypeSchema>;
@@ -25,7 +49,7 @@ export type QuestionType = z.infer<typeof QuestionTypeSchema>;
  * Schema for a PTE exam module.
  */
 export const ModuleSchema = z.object({
-  id: z.string(),
+  id: ModuleIdSchema,
   name: z.string(),
   questionTypes: z.array(QuestionTypeSchema),
 });
@@ -35,7 +59,7 @@ export type Module = z.infer<typeof ModuleSchema>;
  * Schema for a class time-slot.
  */
 export const ClassItemSchema = z.object({
-  id: z.string(),
+  id: ClassIdSchema,
   name: z.string(),
 });
 export type ClassItem = z.infer<typeof ClassItemSchema>;
@@ -56,8 +80,8 @@ export type WeightageEntry = z.infer<typeof WeightageEntrySchema>;
  * Schema for resolved weightage entry with linked question-type.
  */
 export const ResolvedWeightageEntrySchema = WeightageEntrySchema.extend({
-  questionTypeId: z.string().optional(),
-  originModuleId: z.string().optional(),
+  questionTypeId: QuestionTypeIdSchema.optional(),
+  originModuleId: ModuleIdSchema.optional(),
 });
 export type ResolvedWeightageEntry = z.infer<typeof ResolvedWeightageEntrySchema>;
 
@@ -65,10 +89,10 @@ export type ResolvedWeightageEntry = z.infer<typeof ResolvedWeightageEntrySchema
  * Schema for a recorded class session.
  */
 export const SessionSchema = z.object({
-  id: z.string(),
+  id: SessionIdSchema,
   date: z.string(),
-  moduleId: z.string(),
-  questionTypeIds: z.array(z.string()),
+  moduleId: ModuleIdSchema,
+  questionTypeIds: z.array(QuestionTypeIdSchema),
   note: z.string(),
 });
 export type Session = z.infer<typeof SessionSchema>;
@@ -76,13 +100,13 @@ export type Session = z.infer<typeof SessionSchema>;
 /**
  * Schema for per-class coverage mapping.
  */
-export const CoverageMapSchema = z.record(z.string(), z.record(z.string(), z.boolean()));
+export const CoverageMapSchema = z.record(ClassIdSchema, z.record(QuestionTypeIdSchema, z.boolean()));
 export type CoverageMap = z.infer<typeof CoverageMapSchema>;
 
 /**
  * Schema for per-class session history.
  */
-export const SessionMapSchema = z.record(z.string(), z.array(SessionSchema));
+export const SessionMapSchema = z.record(ClassIdSchema, z.array(SessionSchema));
 export type SessionMap = z.infer<typeof SessionMapSchema>;
 
 /**

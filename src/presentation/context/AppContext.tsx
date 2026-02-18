@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { buildDefaultState } from "../../domain/logic/normalization";
-import type { AppState } from "../../domain/types";
+import type { AppState, ClassId, QuestionTypeId } from "../../domain/types";
 import { LoadStateUseCase } from "../../application/use-cases/load-state";
 import { SaveStateUseCase } from "../../application/use-cases/save-state";
 import { ToggleCoverageUseCase } from "../../application/use-cases/toggle-coverage";
@@ -12,6 +12,7 @@ import { ManageClassUseCase, type ClassAction } from "../../application/use-case
 import { ExportDataUseCase, ImportDataUseCase } from "../../application/use-cases/import-export";
 import { createLogger } from "../../infrastructure/logger";
 import { LocalStorageAdapter } from "../../infrastructure/storage/local-storage-adapter";
+import type { Result } from "../../domain/result";
 
 const STORAGE_KEY = "pte-tracker-state-v1";
 
@@ -19,19 +20,16 @@ interface AppContextValue {
   state: AppState;
   isLoading: boolean;
   actions: {
-    toggleCoverage: (questionTypeId: string) => Promise<void>;
+    toggleCoverage: (classId: ClassId, questionTypeId: QuestionTypeId) => Promise<void>;
     manageSession: (action: SessionAction) => Promise<void>;
     manageClass: (action: ClassAction) => Promise<void>;
     exportData: (filename: string) => Promise<void>;
-    importData: (jsonData: string) => Promise<Result<void>>;
+    importData: (jsonData: string) => Promise<Result<void, any>>;
     refreshState: () => Promise<void>;
     toggleTheme: () => void;
   };
   theme: "light" | "dark";
 }
-
-// Result type re-imported or redeclared locally if needed, but AppContext shouldn't leak it too much to pure UI.
-type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
 
 export const AppContext = createContext<AppContextValue | undefined>(undefined);
 
@@ -87,9 +85,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveStateUseCase.execute({ storageKey: STORAGE_KEY, state }, generateCorrelationId());
   }, [state, isLoading, saveStateUseCase]);
 
-  // Simplified actions for implementation:
   const wrappedActions = {
-    toggleCoverage: async (classId: string, questionTypeId: string) => {
+    toggleCoverage: async (classId: ClassId, questionTypeId: QuestionTypeId) => {
       const nextState = await toggleCoverageUseCase.execute(
         { state, classId, questionTypeId },
         generateCorrelationId(),
@@ -113,7 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     exportData: async (filename: string) => {
       await exportDataUseCase.execute({ state, filename }, generateCorrelationId());
     },
-    importData: async (jsonData: string): Promise<Result<void>> => {
+    importData: async (jsonData: string): Promise<Result<void, any>> => {
       const result = await importDataUseCase.execute(
         { currentState: state, jsonData },
         generateCorrelationId(),
@@ -122,9 +119,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setState(result.value);
         return { ok: true, value: undefined };
       }
-      return { ok: false, error: result.error };
+      return result;
     },
     toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
+    refreshState,
   };
 
   const value = useMemo(
@@ -132,9 +130,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       state,
       isLoading,
       theme,
-      actions: wrappedActions as any, // Simplified for brevity in this step
+      actions: wrappedActions,
     }),
-    [state, isLoading, wrappedActions],
+    [state, isLoading, theme, wrappedActions],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

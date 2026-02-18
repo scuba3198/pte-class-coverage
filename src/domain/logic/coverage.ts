@@ -1,17 +1,23 @@
 import { modules } from "../data/modules";
 import { weightageChart } from "../data/weightage";
-import type { Module, ResolvedWeightageEntry, SkillKey } from "../types";
+import type {
+  Module,
+  ModuleId,
+  QuestionTypeId,
+  ResolvedWeightageEntry,
+  SkillKey,
+} from "../types";
 import { normalizeQuestionName } from "./session";
 
 /** Maps question type ID to module ID. */
-export const questionTypeIdToModuleId = new Map<string, string>(
+export const questionTypeIdToModuleId = new Map<QuestionTypeId, ModuleId>(
   modules.flatMap((module) =>
     module.questionTypes.map((questionType) => [questionType.id, module.id]),
   ),
 );
 
 /** Maps normalized "name|moduleId" to question type ID. */
-const questionTypeNameToId = new Map<string, string>(
+const questionTypeNameToId = new Map<string, QuestionTypeId>(
   modules.flatMap((module) =>
     module.questionTypes.map((questionType) => [
       `${normalizeQuestionName(questionType.name)}|${module.id}`,
@@ -21,22 +27,22 @@ const questionTypeNameToId = new Map<string, string>(
 );
 
 /** Legacy aliases for question types found in older data. */
-const questionTypeAliases = new Map<string, string>([
-  ["essay|writing", "write-essay"],
-  ["mcqmultiple|reading", "reading-mcma"],
-  ["mcqsingle|reading", "reading-mcsa"],
-  ["fillintheblanksdragdrop|reading", "reading-fill-blanks-drag"],
-  ["mcqmultiple|listening", "listening-mcma"],
-  ["mcqsingle|listening", "listening-mcsa"],
-  ["fillintheblanks|listening", "listening-fill-blanks"],
-  ["selectmissingword|listening", "select-missing-word"],
+const questionTypeAliases = new Map<string, QuestionTypeId>([
+  ["essay|writing", "write-essay" as QuestionTypeId],
+  ["mcqmultiple|reading", "reading-mcma" as QuestionTypeId],
+  ["mcqsingle|reading", "reading-mcsa" as QuestionTypeId],
+  ["fillintheblanksdragdrop|reading", "reading-fill-blanks-drag" as QuestionTypeId],
+  ["mcqmultiple|listening", "listening-mcma" as QuestionTypeId],
+  ["mcqsingle|listening", "listening-mcsa" as QuestionTypeId],
+  ["fillintheblanks|listening", "listening-fill-blanks" as QuestionTypeId],
+  ["selectmissingword|listening", "select-missing-word" as QuestionTypeId],
 ]);
 
-const moduleNameToId: Record<string, string> = {
-  Speaking: "speaking",
-  Writing: "writing",
-  Reading: "reading",
-  Listening: "listening",
+const moduleNameToId: Record<string, ModuleId> = {
+  Speaking: "speaking" as ModuleId,
+  Writing: "writing" as ModuleId,
+  Reading: "reading" as ModuleId,
+  Listening: "listening" as ModuleId,
 };
 
 /** Resolved weightage entries with questionTypeId and originModuleId linked. */
@@ -46,7 +52,7 @@ export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
     questionTypeId: undefined,
   }))
   .map((entry) => {
-    const moduleId = moduleNameToId[entry.module] || "speaking";
+    const moduleId = moduleNameToId[entry.module] || ("speaking" as ModuleId);
     const key = `${normalizeQuestionName(entry.question)}|${moduleId}`;
     const questionTypeId = questionTypeNameToId.get(key) || questionTypeAliases.get(key);
     return {
@@ -116,21 +122,24 @@ export const getCoverageEntriesForSkill = (
 /**
  * Returns just the IDs of the top question types for a skill.
  */
-export const getCoverageQuestionTypeIdsForSkill = (skill: SkillKey, target = 72): string[] =>
+export const getCoverageQuestionTypeIdsForSkill = (
+  skill: SkillKey,
+  target = 72,
+): QuestionTypeId[] =>
   getCoverageEntriesForSkill(skill, target)
     .map((entry) => entry.questionTypeId)
-    .filter((id): id is string => !!id);
+    .filter((id): id is QuestionTypeId => !!id);
 
 /**
  * Lookups for modules and question types.
  */
-export const getModuleById = (moduleId: string): Module =>
+export const getModuleById = (moduleId: ModuleId): Module =>
   modules.find((module) => module.id === moduleId) || modules[0];
 
-export const getModuleIdByQuestionTypeId = (questionTypeId: string): string | undefined =>
+export const getModuleIdByQuestionTypeId = (questionTypeId: QuestionTypeId): ModuleId | undefined =>
   questionTypeIdToModuleId.get(questionTypeId);
 
-export const getQuestionTypeById = (questionTypeId: string) =>
+export const getQuestionTypeById = (questionTypeId: QuestionTypeId) =>
   modules.flatMap((module) => module.questionTypes).find((item) => item.id === questionTypeId);
 
 export const getAllQuestionTypes = () => modules.flatMap((module) => module.questionTypes);

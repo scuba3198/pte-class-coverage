@@ -42,6 +42,16 @@ graph TD
 3.  **Infrastructure**: Implementation of external services (Storage, Logging).
 4.  **Presentation**: React UI components and state management.
 
+## Formal Systems Enforcement
+
+This project strictly adheres to formal systems architecture rules to ensure behavioral correctness:
+
+-   **Branded Types**: Distinct domain concepts (e.g., `ClassId`, `ModuleId`) use branded primitives to prevent accidental substitution.
+-   **Explicit Error Algebra**: Failures are represented as structured domain values (using `Result<T, E>`) rather than exceptions.
+-   **Closed State Machines**: Complex workflows (like session creation) are modeled as FSMs with explicit state transitions.
+-   **Boundary Validation**: All external data is strictly validated via Zod schemas at every entry point (Storage, Import).
+-   **Pure Domain Logic**: The core logic is pure, deterministic, and easily testable.
+
 ## tech Stack
 
 -   **Framework**: React + Vite

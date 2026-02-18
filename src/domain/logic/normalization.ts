@@ -1,6 +1,14 @@
 import { classDefaults } from "../data/class-defaults";
 import { modules } from "../data/modules";
-import type { AppState, ClassItem, Session } from "../types";
+import type {
+  AppState,
+  ClassId,
+  ClassItem,
+  ModuleId,
+  QuestionTypeId,
+  Session,
+  SessionId,
+} from "../types";
 import { allQuestionTypeIds } from "./coverage";
 import { createSessionId } from "./session";
 
@@ -35,16 +43,18 @@ export const normalizeClasses = (classes: unknown): ClassItem[] => {
     return fallback;
   }
 
-  const defaultNameById = new Map(classDefaults.map((classItem) => [classItem.id, classItem.name]));
+  const defaultNameById = new Map<ClassId, string>(
+    classDefaults.map((classItem) => [classItem.id, classItem.name]),
+  );
   const normalized: ClassItem[] = [];
-  const seen = new Set<string>();
+  const seen = new Set<ClassId>();
 
   classes.forEach((classItem) => {
     if (!classItem || typeof classItem !== "object") {
       return;
     }
     const safeItem = classItem as Record<string, unknown>;
-    const id = String(safeItem.id || "");
+    const id = (safeItem.id || "") as ClassId;
     const name = String(safeItem.name || defaultNameById.get(id) || "");
 
     if (!id || !name || seen.has(id)) {
@@ -57,22 +67,25 @@ export const normalizeClasses = (classes: unknown): ClassItem[] => {
   return normalized.length ? normalized : fallback;
 };
 
-const writingQuestionTypeIds = new Set<string>(
+const writingQuestionTypeIds = new Set<QuestionTypeId>(
   modules.find((module) => module.id === "writing")?.questionTypes.map((item) => item.id) || [],
 );
 
 /**
  * Repairs session module IDs for legacy "speaking-writing" sessions.
  */
-export const normalizeSessionModuleId = (moduleId: string, questionTypeIds: string[]): string => {
+export const normalizeSessionModuleId = (
+  moduleId: string,
+  questionTypeIds: QuestionTypeId[],
+): ModuleId => {
   if (modules.some((module) => module.id === moduleId)) {
-    return moduleId;
+    return moduleId as ModuleId;
   }
   if (moduleId === "speaking-writing") {
     const hasWriting = questionTypeIds.some((id) => writingQuestionTypeIds.has(id));
-    return hasWriting ? "writing" : "speaking";
+    return (hasWriting ? "writing" : "speaking") as ModuleId;
   }
-  return "speaking";
+  return "speaking" as ModuleId;
 };
 
 /**
@@ -113,11 +126,12 @@ export const normalizeState = (state: unknown): AppState => {
           : [];
 
         const questionTypeIds = rawQuestionTypeIds.filter(
-          (id): id is string => typeof id === "string" && allQuestionTypeIds.includes(id),
+          (id): id is QuestionTypeId =>
+            typeof id === "string" && allQuestionTypeIds.includes(id as QuestionTypeId),
         );
 
         return {
-          id: safeSession.id || createSessionId(),
+          id: (safeSession.id || createSessionId()) as SessionId,
           date: safeSession.date || new Date().toISOString().slice(0, 10),
           moduleId: normalizeSessionModuleId(safeSession.moduleId || "speaking", questionTypeIds),
           questionTypeIds,
