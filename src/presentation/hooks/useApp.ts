@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../context/AppContext";
 import { modules } from "../../domain/data/modules";
 import {
@@ -26,10 +26,16 @@ export const useApp = () => {
   const [applyToCoverage, setApplyToCoverage] = useState(true);
 
   // Derived state
-  const activeClass = useMemo(
-    () => state.classes.find((c) => c.id === activeClassId) || state.classes[0],
-    [state.classes, activeClassId],
-  );
+  const activeClass = useMemo(() => {
+    return state.classes.find((c) => c.id === activeClassId) || state.classes[0];
+  }, [state.classes, activeClassId]);
+
+  // Sync activeClassId if the current class is removed
+  useEffect(() => {
+    if (activeClass && activeClass.id !== activeClassId) {
+      setActiveClassId(activeClass.id);
+    }
+  }, [activeClass, activeClassId]);
 
   const activeModule = useMemo(() => getModuleById(activeModuleId), [activeModuleId]);
 
@@ -48,13 +54,13 @@ export const useApp = () => {
   );
 
   const coverageForClass = useMemo(
-    () => state.coverage[activeClassId] || {},
-    [state.coverage, activeClassId],
+    () => (activeClass ? state.coverage[activeClass.id] || {} : {}),
+    [state.coverage, activeClass],
   );
 
   const currentSessions = useMemo(
-    () => state.sessions[activeClassId] || [],
-    [state.sessions, activeClassId],
+    () => (activeClass ? state.sessions[activeClass.id] || [] : []),
+    [state.sessions, activeClass],
   );
 
   const activeSessionSelection = useMemo(() => {
@@ -82,7 +88,8 @@ export const useApp = () => {
 
   const coverageMarksTotal = useMemo(() => {
     return coverageEntries.reduce((sum, entry) => {
-      if (coverageForClass[entry.questionTypeId || ""]) {
+      const qid = entry.questionTypeId || "";
+      if (coverageForClass[qid]) {
         return sum + (entry.scores[activeSkill] || 0);
       }
       return sum;
@@ -111,7 +118,7 @@ export const useApp = () => {
       setSessionDate,
       setApplyToCoverage,
       toggleCoverage: (questionTypeId: string) =>
-        actions.toggleCoverage(activeClassId, questionTypeId),
+        activeClass && actions.toggleCoverage(activeClass.id, questionTypeId as any),
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,
