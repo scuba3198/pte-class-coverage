@@ -48,9 +48,17 @@ This project strictly adheres to formal systems architecture rules to ensure beh
 
 -   **Branded Types**: Distinct domain concepts (e.g., `ClassId`, `ModuleId`) use branded primitives to prevent accidental substitution.
 -   **Explicit Error Algebra**: Failures are represented as structured domain values (using `Result<T, E>`) rather than exceptions.
--   **Closed State Machines**: Complex workflows (like session creation) are modeled as FSMs with explicit state transitions.
+-   **Closed State Machines**: Complex workflows (like session creation) are modeled as FSMs with explicit state transitions and payload validation (Rule 4 & 5).
 -   **Boundary Validation**: All external data is strictly validated via Zod schemas at every entry point (Storage, Import).
 -   **Pure Domain Logic**: The core logic is pure, deterministic, and easily testable.
+
+## UI Features
+
+### 1. Smart Sorting
+The application automatically orders question types by their contribution to the active skill (High to Low), helping students prioritize high-mark tasks.
+
+### 2. Guarded Actions
+Destructive operations such as **Resetting a Class** or **Removing a Class** are protected by in-app confirmation modals to prevent accidental data loss.
 
 ## tech Stack
 
