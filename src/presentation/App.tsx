@@ -43,13 +43,18 @@ const App: React.FC = () => {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => { },
+    onConfirm: () => {},
     isDestructive: false,
   });
 
   const closeModal = () => setConfirmModal((prev) => ({ ...prev, isOpen: false }));
 
-  const showConfirm = (title: string, message: string, onConfirm: () => void, isDestructive = false) => {
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    isDestructive = false,
+  ) => {
     setConfirmModal({
       isOpen: true,
       title,
@@ -111,7 +116,7 @@ const App: React.FC = () => {
               "Reset Class Data",
               "Are you sure you want to reset all coverage and session data for this class? This cannot be undone.",
               () => handlers.manageClass({ type: "RESET_CLASS", classId: activeClass.id }),
-              true
+              true,
             )
           }
         />
@@ -127,7 +132,7 @@ const App: React.FC = () => {
                   "Remove Class",
                   "Are you sure you want to remove this class? All associated coverage and sessions will be permanently deleted.",
                   () => handlers.manageClass({ type: "REMOVE_CLASS", classId: id }),
-                  true
+                  true,
                 )
               }
               onSelectClass={handlers.setActiveClassId}
@@ -208,7 +213,7 @@ const App: React.FC = () => {
         isDestructive={confirmModal.isDestructive}
         confirmLabel="Proceed"
       />
-    </div >
+    </div>
   );
 };
 

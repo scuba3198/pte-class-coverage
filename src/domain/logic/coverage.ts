@@ -1,6 +1,14 @@
 import { modules } from "../data/modules";
 import { weightageChart } from "../data/weightage";
-import { createModuleId, createQuestionTypeId, type Module, type ModuleId, type QuestionTypeId, type ResolvedWeightageEntry, type SkillKey } from "../types";
+import {
+  createModuleId,
+  createQuestionTypeId,
+  type Module,
+  type ModuleId,
+  type QuestionTypeId,
+  type ResolvedWeightageEntry,
+  type SkillKey,
+} from "../types";
 import { normalizeQuestionName } from "./session";
 
 /** Maps question type ID to module ID. */
@@ -49,8 +57,8 @@ export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
     const moduleId = moduleNameToId[entry.module] || createModuleId("speaking");
     const normalized = normalizeQuestionName(entry.question);
     const questionTypeId = normalized.ok
-      ? (questionTypeNameToId.get(`${normalized.value}|${moduleId}`) ||
-        questionTypeAliases.get(`${normalized.value}|${moduleId}`))
+      ? questionTypeNameToId.get(`${normalized.value}|${moduleId}`) ||
+        questionTypeAliases.get(`${normalized.value}|${moduleId}`)
       : undefined;
     return {
       ...entry,

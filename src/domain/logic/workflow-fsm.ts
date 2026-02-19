@@ -51,7 +51,10 @@ export class SessionCreationFSM {
   /**
    * Validates that all question IDs belong to the specified module.
    */
-  private validateQuestions(moduleId: ModuleId, questionTypeIds: QuestionTypeId[]): Result<void, ValidationError> {
+  private validateQuestions(
+    moduleId: ModuleId,
+    questionTypeIds: QuestionTypeId[],
+  ): Result<void, ValidationError> {
     for (const qId of questionTypeIds) {
       const originModuleId = getModuleIdByQuestionTypeId(qId);
       if (originModuleId !== moduleId) {

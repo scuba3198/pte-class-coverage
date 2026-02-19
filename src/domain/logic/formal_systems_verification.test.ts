@@ -21,7 +21,10 @@ describe("Formal Systems Verification", () => {
       expect(fsm.state.type).toBe("ModuleSelected");
 
       // Valid: ModuleSelected -> QuestionsSelected
-      const r3 = fsm.transition({ type: "SELECT_QUESTIONS", questionTypeIds: ["read-aloud" as any] });
+      const r3 = fsm.transition({
+        type: "SELECT_QUESTIONS",
+        questionTypeIds: ["read-aloud" as any],
+      });
       expect(r3.ok).toBe(true);
       expect(fsm.state.type).toBe("QuestionsSelected");
 

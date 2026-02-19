@@ -19,7 +19,8 @@ export const createModuleId = (value: string): ModuleId => ModuleIdSchema.parse(
  */
 export const QuestionTypeIdSchema = z.string().brand<"QuestionTypeId">();
 export type QuestionTypeId = z.infer<typeof QuestionTypeIdSchema>;
-export const createQuestionTypeId = (value: string): QuestionTypeId => QuestionTypeIdSchema.parse(value);
+export const createQuestionTypeId = (value: string): QuestionTypeId =>
+  QuestionTypeIdSchema.parse(value);
 
 /**
  * Branded type for Session ID.

@@ -5,7 +5,7 @@ import {
   type ClassId,
   type QuestionTypeId,
   type Session,
-  type SessionId
+  type SessionId,
 } from "../types";
 
 /**
@@ -39,11 +39,10 @@ export const mergeStates = (
 ): AppState => {
   // Combine all class definitions from both states, prioritizing local names for same IDs
   const classMap = new Map<ClassId, string>();
-  remoteState.classes.forEach(c => classMap.set(c.id, c.name));
-  localState.classes.forEach(c => classMap.set(c.id, c.name));
+  remoteState.classes.forEach((c) => classMap.set(c.id, c.name));
+  localState.classes.forEach((c) => classMap.set(c.id, c.name));
 
   const mergedClasses = Array.from(classMap.entries()).map(([id, name]) => ({ id, name }));
-  const mergedClassIds = new Set(mergedClasses.map(c => c.id));
 
   const coverage: AppState["coverage"] = {};
   const sessions: AppState["sessions"] = {};
@@ -71,7 +70,7 @@ export const mergeStates = (
   });
 
   // Cleanup orphans: if a session mapping exists for a class not in mergedClasses, it's an orphan.
-  // The current loop above only processes classes in mergedClasses, so we effectively 
+  // The current loop above only processes classes in mergedClasses, so we effectively
   // drop sessions for non-existent classes by not adding them to the new `sessions` object.
 
   return {
