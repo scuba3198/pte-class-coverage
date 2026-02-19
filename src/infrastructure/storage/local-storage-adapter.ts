@@ -35,7 +35,7 @@ export interface StorageAdapter {
  * Implementation of StorageAdapter using window.localStorage.
  */
 export class LocalStorageAdapter implements StorageAdapter {
-  constructor(private readonly logger: Logger) { }
+  constructor(private readonly logger: Logger) {}
 
   /**
    * Loads and validates the application state from local storage.
@@ -54,7 +54,9 @@ export class LocalStorageAdapter implements StorageAdapter {
       const result = AppStateSchema.safeParse(parsed);
 
       if (!result.success) {
-        const errorDetails = result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
+        const errorDetails = result.error.errors
+          .map((e) => `${e.path.join(".")}: ${e.message}`)
+          .join(", ");
         this.logger.warn("LocalStorage data failed Zod validation", {
           errors: result.error.errors,
         });

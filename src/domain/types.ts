@@ -5,24 +5,28 @@ import { z } from "zod";
  */
 export const ClassIdSchema = z.string().brand<"ClassId">();
 export type ClassId = z.infer<typeof ClassIdSchema>;
+export const createClassId = (value: string): ClassId => ClassIdSchema.parse(value);
 
 /**
  * Branded type for Module ID.
  */
 export const ModuleIdSchema = z.string().brand<"ModuleId">();
 export type ModuleId = z.infer<typeof ModuleIdSchema>;
+export const createModuleId = (value: string): ModuleId => ModuleIdSchema.parse(value);
 
 /**
  * Branded type for Question Type ID.
  */
 export const QuestionTypeIdSchema = z.string().brand<"QuestionTypeId">();
 export type QuestionTypeId = z.infer<typeof QuestionTypeIdSchema>;
+export const createQuestionTypeId = (value: string): QuestionTypeId => QuestionTypeIdSchema.parse(value);
 
 /**
  * Branded type for Session ID.
  */
 export const SessionIdSchema = z.string().brand<"SessionId">();
 export type SessionId = z.infer<typeof SessionIdSchema>;
+export const createSessionIdPrimitive = (value: string): SessionId => SessionIdSchema.parse(value);
 
 /**
  * Schema for a single communicative skill.
@@ -100,7 +104,10 @@ export type Session = z.infer<typeof SessionSchema>;
 /**
  * Schema for per-class coverage mapping.
  */
-export const CoverageMapSchema = z.record(ClassIdSchema, z.record(QuestionTypeIdSchema, z.boolean()));
+export const CoverageMapSchema = z.record(
+  ClassIdSchema,
+  z.record(QuestionTypeIdSchema, z.boolean()),
+);
 export type CoverageMap = z.infer<typeof CoverageMapSchema>;
 
 /**

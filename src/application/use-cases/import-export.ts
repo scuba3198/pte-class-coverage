@@ -31,8 +31,11 @@ export interface ExportDataRequest {
 /**
  * Use case for importing data from a JSON backup.
  */
-export class ImportDataUseCase implements UseCase<ImportDataRequest, Result<AppState, ImportExportError>> {
-  constructor(private readonly logger: Logger) { }
+export class ImportDataUseCase implements UseCase<
+  ImportDataRequest,
+  Result<AppState, ImportExportError>
+> {
+  constructor(private readonly logger: Logger) {}
 
   async execute(
     request: ImportDataRequest,
@@ -74,7 +77,7 @@ export class ImportDataUseCase implements UseCase<ImportDataRequest, Result<AppS
  * Use case for exporting state as a JSON file.
  */
 export class ExportDataUseCase implements UseCase<ExportDataRequest, void> {
-  constructor(private readonly logger: Logger) { }
+  constructor(private readonly logger: Logger) {}
 
   async execute(request: ExportDataRequest, correlationId: CorrelationId): Promise<void> {
     this.logger.info("Executing ExportDataUseCase", { correlationId, filename: request.filename });

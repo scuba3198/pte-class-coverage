@@ -88,7 +88,7 @@ export const CoverageCard: React.FC<CoverageCardProps> = ({
             >
               <span className="question-name">{`${entry.question}${originSuffix}`}</span>
               <span className="question-status">{isCovered ? "Covered" : "Not yet"}</span>
-              <span className="question-status">{`${entry.scores[activeSkill]?.toFixed(2) || "0.00"} marks`}</span>
+              <span className="question-status">{`${(entry.scores[activeSkill] ?? 0).toFixed(2)} marks`}</span>
             </button>
           );
         })}

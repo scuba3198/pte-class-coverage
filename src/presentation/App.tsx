@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useApp } from "./hooks/useApp";
 import { ClassBar } from "./components/ClassBar";
 import { CoverageCard } from "./components/CoverageCard";
@@ -8,6 +8,7 @@ import { ClassEditor } from "./components/ClassEditor";
 import { BackupCard } from "./components/BackupCard";
 import { HelpCard } from "./components/HelpCard";
 import { WeightageTable } from "./components/WeightageTable";
+import { ConfirmationModal } from "./components/ConfirmationModal";
 import viteLogo from "../assets/vite.svg";
 import "./styles/App.css";
 
@@ -31,6 +32,35 @@ const App: React.FC = () => {
     handlers,
     theme,
   } = useApp();
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => { },
+    isDestructive: false,
+  });
+
+  const closeModal = () => setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void, isDestructive = false) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        closeModal();
+      },
+      isDestructive,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -77,7 +107,12 @@ const App: React.FC = () => {
           activeClassId={activeClass.id}
           onSelectClass={handlers.setActiveClassId}
           onResetClass={() =>
-            handlers.manageClass({ type: "RESET_CLASS", classId: activeClass.id })
+            showConfirm(
+              "Reset Class Data",
+              "Are you sure you want to reset all coverage and session data for this class? This cannot be undone.",
+              () => handlers.manageClass({ type: "RESET_CLASS", classId: activeClass.id }),
+              true
+            )
           }
         />
 
@@ -87,7 +122,14 @@ const App: React.FC = () => {
               classes={state.classes}
               activeClassId={activeClass.id}
               onAddClass={(name) => handlers.manageClass({ type: "ADD_CLASS", name })}
-              onRemoveClass={(id) => handlers.manageClass({ type: "REMOVE_CLASS", classId: id })}
+              onRemoveClass={(id) =>
+                showConfirm(
+                  "Remove Class",
+                  "Are you sure you want to remove this class? All associated coverage and sessions will be permanently deleted.",
+                  () => handlers.manageClass({ type: "REMOVE_CLASS", classId: id }),
+                  true
+                )
+              }
               onSelectClass={handlers.setActiveClassId}
             />
 
@@ -156,7 +198,17 @@ const App: React.FC = () => {
       <footer className="app-footer">
         <p>© {new Date().getFullYear()} PTE Academic Score Weightage Tracker</p>
       </footer>
-    </div>
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeModal}
+        isDestructive={confirmModal.isDestructive}
+        confirmLabel="Proceed"
+      />
+    </div >
   );
 };
 

@@ -20,6 +20,10 @@ export const WeightageTable: React.FC = () => {
     );
   }, []);
 
+  const sortedWeightageChart = useMemo(() => {
+    return [...weightageChart].sort((a, b) => b.total - a.total);
+  }, []);
+
   return (
     <div className="card weightage-card">
       <div className="card-header">
@@ -32,7 +36,7 @@ export const WeightageTable: React.FC = () => {
         </div>
       </div>
       <div className="weightage-cards">
-        {weightageChart.map((entry) => (
+        {sortedWeightageChart.map((entry) => (
           <div
             key={`${entry.question}-${entry.module}`}
             className="card"
@@ -116,7 +120,7 @@ export const WeightageTable: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {weightageChart.map((entry) => (
+            {sortedWeightageChart.map((entry) => (
               <tr
                 key={`${entry.question}-${entry.module}`}
                 className={`weightage-row weightage-${entry.module.toLowerCase()}`}

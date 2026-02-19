@@ -1,12 +1,6 @@
 import { modules } from "../data/modules";
 import { weightageChart } from "../data/weightage";
-import type {
-  Module,
-  ModuleId,
-  QuestionTypeId,
-  ResolvedWeightageEntry,
-  SkillKey,
-} from "../types";
+import { createModuleId, createQuestionTypeId, type Module, type ModuleId, type QuestionTypeId, type ResolvedWeightageEntry, type SkillKey } from "../types";
 import { normalizeQuestionName } from "./session";
 
 /** Maps question type ID to module ID. */
@@ -19,30 +13,30 @@ export const questionTypeIdToModuleId = new Map<QuestionTypeId, ModuleId>(
 /** Maps normalized "name|moduleId" to question type ID. */
 const questionTypeNameToId = new Map<string, QuestionTypeId>(
   modules.flatMap((module) =>
-    module.questionTypes.map((questionType) => [
-      `${normalizeQuestionName(questionType.name)}|${module.id}`,
-      questionType.id,
-    ]),
+    module.questionTypes.flatMap((questionType) => {
+      const normalized = normalizeQuestionName(questionType.name);
+      return normalized.ok ? [[`${normalized.value}|${module.id}`, questionType.id]] : [];
+    }),
   ),
 );
 
 /** Legacy aliases for question types found in older data. */
 const questionTypeAliases = new Map<string, QuestionTypeId>([
-  ["essay|writing", "write-essay" as QuestionTypeId],
-  ["mcqmultiple|reading", "reading-mcma" as QuestionTypeId],
-  ["mcqsingle|reading", "reading-mcsa" as QuestionTypeId],
-  ["fillintheblanksdragdrop|reading", "reading-fill-blanks-drag" as QuestionTypeId],
-  ["mcqmultiple|listening", "listening-mcma" as QuestionTypeId],
-  ["mcqsingle|listening", "listening-mcsa" as QuestionTypeId],
-  ["fillintheblanks|listening", "listening-fill-blanks" as QuestionTypeId],
-  ["selectmissingword|listening", "select-missing-word" as QuestionTypeId],
+  ["essay|writing", createQuestionTypeId("write-essay")],
+  ["mcqmultiple|reading", createQuestionTypeId("reading-mcma")],
+  ["mcqsingle|reading", createQuestionTypeId("reading-mcsa")],
+  ["fillintheblanksdragdrop|reading", createQuestionTypeId("reading-fill-blanks-drag")],
+  ["mcqmultiple|listening", createQuestionTypeId("listening-mcma")],
+  ["mcqsingle|listening", createQuestionTypeId("listening-mcsa")],
+  ["fillintheblanks|listening", createQuestionTypeId("listening-fill-blanks")],
+  ["selectmissingword|listening", createQuestionTypeId("select-missing-word")],
 ]);
 
 const moduleNameToId: Record<string, ModuleId> = {
-  Speaking: "speaking" as ModuleId,
-  Writing: "writing" as ModuleId,
-  Reading: "reading" as ModuleId,
-  Listening: "listening" as ModuleId,
+  Speaking: createModuleId("speaking"),
+  Writing: createModuleId("writing"),
+  Reading: createModuleId("reading"),
+  Listening: createModuleId("listening"),
 };
 
 /** Resolved weightage entries with questionTypeId and originModuleId linked. */
@@ -52,9 +46,12 @@ export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
     questionTypeId: undefined,
   }))
   .map((entry) => {
-    const moduleId = moduleNameToId[entry.module] || ("speaking" as ModuleId);
-    const key = `${normalizeQuestionName(entry.question)}|${moduleId}`;
-    const questionTypeId = questionTypeNameToId.get(key) || questionTypeAliases.get(key);
+    const moduleId = moduleNameToId[entry.module] || createModuleId("speaking");
+    const normalized = normalizeQuestionName(entry.question);
+    const questionTypeId = normalized.ok
+      ? (questionTypeNameToId.get(`${normalized.value}|${moduleId}`) ||
+        questionTypeAliases.get(`${normalized.value}|${moduleId}`))
+      : undefined;
     return {
       ...entry,
       questionTypeId,
@@ -75,13 +72,19 @@ export const allQuestionTypeIds = modules.flatMap((module) =>
   module.questionTypes.map((questionType) => questionType.id),
 );
 
-/** Question types that are prioritised for specific skills. */
+/** Question types that are prioritised for specific skills (stored as normalized names). */
 const forcedEntriesBySkill: Partial<Record<SkillKey, Set<string>>> = {
-  writing: new Set([normalizeQuestionName("Summarize Spoken Text")]),
-  listening: new Set([
-    normalizeQuestionName("Highlight Incorrect Words"),
-    normalizeQuestionName("Fill in the Blanks (Type In)"),
-  ]),
+  writing: new Set(
+    [normalizeQuestionName("Summarize Spoken Text")]
+      .filter((r): r is { ok: true; value: string } => r.ok)
+      .map((r) => r.value),
+  ),
+  listening: new Set(
+    ["Highlight Incorrect Words", "Fill in the Blanks (Type In)"]
+      .map((n) => normalizeQuestionName(n))
+      .filter((r): r is { ok: true; value: string } => r.ok)
+      .map((r) => r.value),
+  ),
 };
 
 /**
@@ -92,13 +95,17 @@ export const getCoverageEntriesForSkill = (
   target = 72,
 ): ResolvedWeightageEntry[] => {
   const forcedNames = forcedEntriesBySkill[skill] || new Set<string>();
-  const forcedEntries = weightageEntries.filter((entry) =>
-    forcedNames.has(normalizeQuestionName(entry.question)),
-  );
+  const forcedEntries = weightageEntries.filter((entry) => {
+    const normalized = normalizeQuestionName(entry.question);
+    return normalized.ok && forcedNames.has(normalized.value);
+  });
 
   const entries = weightageEntries
     .filter((entry) => entry.scores[skill])
-    .filter((entry) => !forcedNames.has(normalizeQuestionName(entry.question)))
+    .filter((entry) => {
+      const normalized = normalizeQuestionName(entry.question);
+      return !normalized.ok || !forcedNames.has(normalized.value);
+    })
     .sort((a, b) => (b.scores[skill] || 0) - (a.scores[skill] || 0));
 
   if (!entries.length) {
@@ -116,7 +123,7 @@ export const getCoverageEntriesForSkill = (
     runningTotal += entry.scores[skill] || 0;
   }
 
-  return result;
+  return result.sort((a, b) => (b.scores[skill] || 0) - (a.scores[skill] || 0));
 };
 
 /**
