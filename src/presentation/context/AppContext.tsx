@@ -11,7 +11,11 @@ import {
 import { ManageClassUseCase, type ClassAction } from "../../application/use-cases/manage-class";
 import { ExportDataUseCase, ImportDataUseCase } from "../../application/use-cases/import-export";
 import { createLogger } from "../../infrastructure/logger";
-import { LocalStorageAdapter, type StorageAdapter, NotFoundError } from "../../infrastructure/storage/local-storage-adapter";
+import {
+  LocalStorageAdapter,
+  type StorageAdapter,
+  NotFoundError,
+} from "../../infrastructure/storage/local-storage-adapter";
 import { SupabaseStorageAdapter } from "../../infrastructure/storage/supabase-storage-adapter";
 import { supabase } from "../../infrastructure/supabase";
 import type { Result } from "../../domain/result";
@@ -69,7 +73,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Use a ref to capture the latest state for actions and effects
   const stateRef = useRef<AppState>(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const hasSyncedAfterLoginRef = useRef(false);
   const activeRefreshIdRef = useRef<string | null>(null);
@@ -87,7 +93,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     // Auth events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       const newUser = session?.user ?? null;
       setUser((prev) => {
@@ -121,79 +129,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const generateCorrelationId = () => `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  const refreshState = useCallback(async (isInitialLogin = false) => {
-    const correlationId = generateCorrelationId();
-    activeRefreshIdRef.current = correlationId;
+  const refreshState = useCallback(
+    async (isInitialLogin = false) => {
+      const correlationId = generateCorrelationId();
+      activeRefreshIdRef.current = correlationId;
 
-    setIsLoading(true);
-    setInitializedStorage(null);
+      setIsLoading(true);
+      setInitializedStorage(null);
 
-    const currentMemoryState = stateRef.current;
-    const currentStorage = storage;
+      const currentMemoryState = stateRef.current;
+      const currentStorage = storage;
 
-    logger.info("Refreshing state", { isInitialLogin, storage: user ? "supabase" : "local", correlationId });
-
-    try {
-      const result = await loadStateUseCase.execute(
-        { storageKey: STORAGE_KEY },
+      logger.info("Refreshing state", {
+        isInitialLogin,
+        storage: user ? "supabase" : "local",
         correlationId,
-      );
+      });
 
-      // Verify this is still the active (latest) refresh request
-      if (activeRefreshIdRef.current !== correlationId) {
-        logger.info("Refresh preempted by newer request, discarding", { correlationId });
-        return;
-      }
+      try {
+        const result = await loadStateUseCase.execute({ storageKey: STORAGE_KEY }, correlationId);
 
-      // Verify storage hasn't changed out from under us
-      if (storage !== currentStorage) {
-        logger.warn("Storage changed during load, discarding results", { correlationId });
-        return;
-      }
+        // Verify this is still the active (latest) refresh request
+        if (activeRefreshIdRef.current !== correlationId) {
+          logger.info("Refresh preempted by newer request, discarding", { correlationId });
+          return;
+        }
 
-      let loadedState: AppState;
+        // Verify storage hasn't changed out from under us
+        if (storage !== currentStorage) {
+          logger.warn("Storage changed during load, discarding results", { correlationId });
+          return;
+        }
 
-      if (result.ok) {
-        loadedState = result.value;
-      } else if (result.error instanceof NotFoundError) {
-        logger.info("No state found in storage, using default", { correlationId });
-        loadedState = buildDefaultState();
-      } else {
-        logger.error("State load failed with a serious error. Aborting initialization to protect cloud data.", {
-          error: result.error.message,
-          correlationId
-        });
-        setIsLoading(false);
-        return;
-      }
+        let loadedState: AppState;
 
-      if (isInitialLogin && user) {
-        const cloudHasData = Object.values(loadedState.coverage).some(c => Object.values(c).some(v => v === true)) ||
-          Object.values(loadedState.sessions).some(s => s.length > 0);
-
-        const memoryHasData = Object.values(currentMemoryState.coverage).some(c => Object.values(c).some(v => v === true)) ||
-          Object.values(currentMemoryState.sessions).some(s => s.length > 0);
-
-        if (!cloudHasData && memoryHasData) {
-          logger.info("Merging local work into fresh cloud profile", { correlationId });
-          setState(currentMemoryState);
-          setInitializedStorage(currentStorage);
+        if (result.ok) {
+          loadedState = result.value;
+        } else if (result.error instanceof NotFoundError) {
+          logger.info("No state found in storage, using default", { correlationId });
+          loadedState = buildDefaultState();
+        } else {
+          logger.error(
+            "State load failed with a serious error. Aborting initialization to protect cloud data.",
+            {
+              error: result.error.message,
+              correlationId,
+            },
+          );
           setIsLoading(false);
           return;
         }
-      }
 
-      setState(loadedState);
-      setInitializedStorage(currentStorage);
-    } catch (err) {
-      logger.error("Unexpected error during refreshState", { error: err, correlationId });
-    } finally {
-      // Only reset loading state if we are still the relevant request
-      if (activeRefreshIdRef.current === correlationId) {
-        setIsLoading(false);
+        if (isInitialLogin && user) {
+          const cloudHasData =
+            Object.values(loadedState.coverage).some((c) =>
+              Object.values(c).some((v) => v === true),
+            ) || Object.values(loadedState.sessions).some((s) => s.length > 0);
+
+          const memoryHasData =
+            Object.values(currentMemoryState.coverage).some((c) =>
+              Object.values(c).some((v) => v === true),
+            ) || Object.values(currentMemoryState.sessions).some((s) => s.length > 0);
+
+          if (!cloudHasData && memoryHasData) {
+            logger.info("Merging local work into fresh cloud profile", { correlationId });
+            setState(currentMemoryState);
+            setInitializedStorage(currentStorage);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        setState(loadedState);
+        setInitializedStorage(currentStorage);
+      } catch (err) {
+        logger.error("Unexpected error during refreshState", { error: err, correlationId });
+      } finally {
+        // Only reset loading state if we are still the relevant request
+        if (activeRefreshIdRef.current === correlationId) {
+          setIsLoading(false);
+        }
       }
-    }
-  }, [loadStateUseCase, user, storage, logger]);
+    },
+    [loadStateUseCase, user, storage, logger],
+  );
 
   // Handle storage transitions (refresh when user/storage changes)
   // Debounced to prevent rapid-fire triggers from multiple auth events
@@ -219,58 +238,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveStateUseCase.execute({ storageKey: STORAGE_KEY, state }, correlationId);
   }, [state, initializedStorage, storage, isLoading, saveStateUseCase]);
 
-  const wrappedActions = useMemo(() => ({
-    toggleCoverage: async (classId: ClassId, questionTypeId: QuestionTypeId) => {
-      const nextState = await toggleCoverageUseCase.execute({ state: stateRef.current, classId, questionTypeId }, generateCorrelationId());
-      setState(nextState);
-    },
-    manageSession: async (action: SessionAction) => {
-      const nextState = await manageSessionUseCase.execute({ state: stateRef.current, action }, generateCorrelationId());
-      setState(nextState);
-    },
-    manageClass: async (action: ClassAction) => {
-      const nextState = await manageClassUseCase.execute({ state: stateRef.current, action }, generateCorrelationId());
-      setState(nextState);
-    },
-    exportData: async (filename: string) => {
-      await exportDataUseCase.execute({ state: stateRef.current, filename }, generateCorrelationId());
-    },
-    importData: async (jsonData: string): Promise<Result<void, any>> => {
-      const result = await importDataUseCase.execute({ currentState: stateRef.current, jsonData }, generateCorrelationId());
-      if (result.ok) { setState(result.value); return { ok: true, value: undefined }; }
-      return result;
-    },
-    toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
-    refreshState: () => refreshState(false),
-    logout: async () => {
-      setIsLoading(true);
-      setInitializedStorage(null);
-      activeRefreshIdRef.current = "logout"; // Block any pending refreshes
-      try {
-        await supabase.auth.signOut();
-        setState(buildDefaultState());
-        hasSyncedAfterLoginRef.current = false;
-        setIsGuestMode(false);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    setGuestMode: (isGuest: boolean) => {
-      setIsGuestMode(isGuest);
-      if (isGuest) {
-        refreshState(false);
-      }
-    }
-  }), [refreshState, toggleCoverageUseCase, manageSessionUseCase, manageClassUseCase, exportDataUseCase, importDataUseCase, logger]);
+  const wrappedActions = useMemo(
+    () => ({
+      toggleCoverage: async (classId: ClassId, questionTypeId: QuestionTypeId) => {
+        const nextState = await toggleCoverageUseCase.execute(
+          { state: stateRef.current, classId, questionTypeId },
+          generateCorrelationId(),
+        );
+        setState(nextState);
+      },
+      manageSession: async (action: SessionAction) => {
+        const nextState = await manageSessionUseCase.execute(
+          { state: stateRef.current, action },
+          generateCorrelationId(),
+        );
+        setState(nextState);
+      },
+      manageClass: async (action: ClassAction) => {
+        const nextState = await manageClassUseCase.execute(
+          { state: stateRef.current, action },
+          generateCorrelationId(),
+        );
+        setState(nextState);
+      },
+      exportData: async (filename: string) => {
+        await exportDataUseCase.execute(
+          { state: stateRef.current, filename },
+          generateCorrelationId(),
+        );
+      },
+      importData: async (jsonData: string): Promise<Result<void, any>> => {
+        const result = await importDataUseCase.execute(
+          { currentState: stateRef.current, jsonData },
+          generateCorrelationId(),
+        );
+        if (result.ok) {
+          setState(result.value);
+          return { ok: true, value: undefined };
+        }
+        return result;
+      },
+      toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
+      refreshState: () => refreshState(false),
+      logout: async () => {
+        setIsLoading(true);
+        setInitializedStorage(null);
+        activeRefreshIdRef.current = "logout"; // Block any pending refreshes
+        try {
+          await supabase.auth.signOut();
+          setState(buildDefaultState());
+          hasSyncedAfterLoginRef.current = false;
+          setIsGuestMode(false);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      setGuestMode: (isGuest: boolean) => {
+        setIsGuestMode(isGuest);
+        if (isGuest) {
+          refreshState(false);
+        }
+      },
+    }),
+    [
+      refreshState,
+      toggleCoverageUseCase,
+      manageSessionUseCase,
+      manageClassUseCase,
+      exportDataUseCase,
+      importDataUseCase,
+      logger,
+    ],
+  );
 
-  const value = useMemo(() => ({
-    state,
-    isLoading,
-    user,
-    isGuestMode,
-    theme,
-    actions: wrappedActions,
-  }), [state, isLoading, user, isGuestMode, theme, wrappedActions]);
+  const value = useMemo(
+    () => ({
+      state,
+      isLoading,
+      user,
+      isGuestMode,
+      theme,
+      actions: wrappedActions,
+    }),
+    [state, isLoading, user, isGuestMode, theme, wrappedActions],
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

@@ -1,7 +1,10 @@
-import { buildDefaultState, normalizeState } from "../../domain/logic/normalization";
+import { normalizeState } from "../../domain/logic/normalization";
 import type { AppState } from "../../domain/types";
 import type { Logger } from "../../infrastructure/logger";
-import type { StorageAdapter, StorageError } from "../../infrastructure/storage/local-storage-adapter";
+import type {
+  StorageAdapter,
+  StorageError,
+} from "../../infrastructure/storage/local-storage-adapter";
 import type { CorrelationId, UseCase } from "../types";
 import { type Result, ok, err } from "../../domain/result";
 
@@ -17,9 +20,12 @@ export class LoadStateUseCase implements UseCase<LoadStateRequest, Result<AppSta
   constructor(
     private readonly logger: Logger,
     private readonly storage: StorageAdapter,
-  ) { }
+  ) {}
 
-  async execute(request: LoadStateRequest, correlationId: CorrelationId): Promise<Result<AppState, StorageError>> {
+  async execute(
+    request: LoadStateRequest,
+    correlationId: CorrelationId,
+  ): Promise<Result<AppState, StorageError>> {
     this.logger.info("Executing LoadStateUseCase", {
       correlationId,
       storageKey: request.storageKey,
