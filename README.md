@@ -84,6 +84,14 @@ VITE_SUPABASE_URL=your_project_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
+### GitHub Actions Deployment
+For the live version on GitHub Pages to work, you must add your Supabase credentials to the repository secrets:
+1. Go to your GitHub Repository -> **Settings** -> **Secrets and variables** -> **Actions**.
+2. Click **New repository secret**.
+3. Add `VITE_SUPABASE_URL` with your Supabase Project URL.
+4. Add `VITE_SUPABASE_ANON_KEY` with your Supabase Anon Key.
+5. The next time you push to `main`, the deployment will pick up these variables and cloud sync will be enabled.
+
 ## Scripts
 
 | Command              | Description                                                                 |
