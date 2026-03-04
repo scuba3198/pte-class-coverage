@@ -46,7 +46,7 @@ const App: React.FC = () => {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => { },
+    onConfirm: () => {},
     isDestructive: false,
   });
 

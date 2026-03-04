@@ -34,7 +34,10 @@ export const useApp = () => {
 
   // Derived state
   const activeClass = useMemo(() => {
-    return state.classes.find((c) => c.id === activeClassId) || state.classes[0] || { id: "", name: "No Class" };
+    return (
+      state.classes.find((c) => c.id === activeClassId) ||
+      state.classes[0] || { id: "", name: "No Class" }
+    );
   }, [state.classes, activeClassId]);
 
   // Sync activeClassId if the current class is removed
@@ -127,7 +130,9 @@ export const useApp = () => {
       setSessionDate,
       setApplyToCoverage,
       toggleCoverage: (questionTypeId: string) =>
-        activeClass && activeClass.id && actions.toggleCoverage(activeClass.id, questionTypeId as any),
+        activeClass &&
+        activeClass.id &&
+        actions.toggleCoverage(activeClass.id, questionTypeId as any),
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,
