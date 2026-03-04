@@ -14,9 +14,14 @@
     "check": "run-s format lint type-check test test:architecture"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.34.5",
+    "lucide-react": "^0.576.0",
     "pino": "^9.6.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

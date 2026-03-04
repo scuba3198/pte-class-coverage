@@ -17,22 +17,29 @@ export const useApp = () => {
     throw new Error("useApp must be used within an AppProvider");
   }
 
-  const { state, actions, isLoading, theme } = context;
+  const { state, actions, isLoading, user, isGuestMode, theme } = context;
 
   // UI-only state (doesn't need persistence in AppState)
-  const [activeClassId, setActiveClassId] = useState(state.classes[0]?.id || "");
+  const [activeClassId, setActiveClassId] = useState("");
   const [activeModuleId, setActiveModuleId] = useState("speaking");
   const [sessionDate, setSessionDate] = useState(new Date().toISOString().slice(0, 10));
   const [applyToCoverage, setApplyToCoverage] = useState(true);
 
+  // Set initial activeClassId once state is loaded
+  useEffect(() => {
+    if (!activeClassId && state.classes.length > 0) {
+      setActiveClassId(state.classes[0].id);
+    }
+  }, [state.classes, activeClassId]);
+
   // Derived state
   const activeClass = useMemo(() => {
-    return state.classes.find((c) => c.id === activeClassId) || state.classes[0];
+    return state.classes.find((c) => c.id === activeClassId) || state.classes[0] || { id: "", name: "No Class" };
   }, [state.classes, activeClassId]);
 
   // Sync activeClassId if the current class is removed
   useEffect(() => {
-    if (activeClass && activeClass.id !== activeClassId) {
+    if (activeClass && activeClass.id !== activeClassId && activeClass.id !== "") {
       setActiveClassId(activeClass.id);
     }
   }, [activeClass, activeClassId]);
@@ -54,12 +61,12 @@ export const useApp = () => {
   );
 
   const coverageForClass = useMemo(
-    () => (activeClass ? state.coverage[activeClass.id] || {} : {}),
+    () => (activeClass && activeClass.id ? state.coverage[activeClass.id] || {} : {}),
     [state.coverage, activeClass],
   );
 
   const currentSessions = useMemo(
-    () => (activeClass ? state.sessions[activeClass.id] || [] : []),
+    () => (activeClass && activeClass.id ? state.sessions[activeClass.id] || [] : []),
     [state.sessions, activeClass],
   );
 
@@ -99,6 +106,8 @@ export const useApp = () => {
   return {
     state,
     isLoading,
+    user,
+    isGuestMode,
     activeClass,
     activeModule,
     activeSkill,
@@ -118,12 +127,15 @@ export const useApp = () => {
       setSessionDate,
       setApplyToCoverage,
       toggleCoverage: (questionTypeId: string) =>
-        activeClass && actions.toggleCoverage(activeClass.id, questionTypeId as any),
+        activeClass && activeClass.id && actions.toggleCoverage(activeClass.id, questionTypeId as any),
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,
       importData: actions.importData,
       toggleTheme: actions.toggleTheme,
+      refreshState: actions.refreshState,
+      logout: actions.logout,
+      setGuestMode: actions.setGuestMode,
     },
     theme,
   };
