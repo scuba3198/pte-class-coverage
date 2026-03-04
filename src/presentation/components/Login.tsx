@@ -62,7 +62,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onContinueAsGuest 
             />
           </div>
           {error && <div className="login-error">{error}</div>}
-          <button type="submit" className="login-button" disabled={loading}>
+          {!supabase && (
+            <div className="login-error">
+              Cloud Sync is currently unavailable. Please use Guest Mode.
+            </div>
+          )}
+          <button type="submit" className="login-button" disabled={loading || !supabase}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
 

@@ -85,31 +85,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let mounted = true;
 
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && session?.user) {
-        setUser(session.user);
-        setIsGuestMode(false);
-      }
-    });
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (mounted && session?.user) {
+          setUser(session.user);
+          setIsGuestMode(false);
+        }
+      });
+    }
 
     // Auth events
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      const newUser = session?.user ?? null;
-      setUser((prev) => {
-        if (prev?.id === newUser?.id && !!prev === !!newUser) return prev;
-        return newUser;
+    let subscription: any = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!mounted) return;
+        const newUser = session?.user ?? null;
+        setUser((prev) => {
+          if (prev?.id === newUser?.id && !!prev === !!newUser) return prev;
+          return newUser;
+        });
+        if (newUser) {
+          setIsGuestMode(false);
+        }
       });
-      if (newUser) {
-        setIsGuestMode(false);
-      }
-    });
+      subscription = data.subscription;
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -285,7 +289,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setInitializedStorage(null);
         activeRefreshIdRef.current = "logout"; // Block any pending refreshes
         try {
-          await supabase.auth.signOut();
+          if (supabase) {
+            await supabase.auth.signOut();
+          }
           setState(buildDefaultState());
           hasSyncedAfterLoginRef.current = false;
           setIsGuestMode(false);
