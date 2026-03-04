@@ -9,6 +9,7 @@ import { BackupCard } from "./components/BackupCard";
 import { HelpCard } from "./components/HelpCard";
 import { WeightageTable } from "./components/WeightageTable";
 import { ConfirmationModal } from "./components/ConfirmationModal";
+import { Login } from "./components/Login";
 import viteLogo from "../assets/vite.svg";
 import "./styles/App.css";
 
@@ -16,6 +17,8 @@ const App: React.FC = () => {
   const {
     state,
     isLoading,
+    user,
+    isGuestMode,
     activeClass,
     activeModule,
     activeSkill,
@@ -43,7 +46,7 @@ const App: React.FC = () => {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
     isDestructive: false,
   });
 
@@ -75,6 +78,16 @@ const App: React.FC = () => {
     );
   }
 
+  // Show login only if not signed in AND not in guest mode
+  if (!user && !isGuestMode) {
+    return (
+      <Login
+        onLoginSuccess={handlers.refreshState}
+        onContinueAsGuest={() => handlers.setGuestMode(true)}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -94,6 +107,27 @@ const App: React.FC = () => {
         </div>
 
         <div className="auth-panel">
+          {user ? (
+            <div className="auth-signed-in">
+              <div className="auth-info">
+                <p className="auth-label">Teacher</p>
+                <p className="auth-value">{user.email}</p>
+              </div>
+              <button className="logout-button" onClick={handlers.logout}>
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="auth-guest">
+              <div className="auth-info">
+                <p className="auth-label">Mode</p>
+                <p className="auth-value">Guest (Local Only)</p>
+              </div>
+              <button className="login-link-button" onClick={() => handlers.setGuestMode(false)}>
+                Sign In
+              </button>
+            </div>
+          )}
           <div className="theme-toggle">
             <button
               className="theme-toggle-button"

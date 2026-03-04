@@ -816,6 +816,7 @@ input[type="date"] {
     opacity: 0;
     transform: scale(0.95) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -841,6 +842,7 @@ footer {
 }
 
 @media (max-width: 900px) {
+
   /* Changed .app-header to just .app-header for consistency if needed, but original used block nesting */
   .app-header {
     flex-direction: column;
@@ -871,4 +873,116 @@ footer {
   .question-grid.compact {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
+}
+
+/* Login Screen Styles */
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--surface-muted-2);
+  padding: 24px;
+}
+
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  padding: 40px;
+  box-shadow: var(--shadow-deep);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: modalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.login-header {
+  text-align: center;
+}
+
+.login-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.login-header p {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-500);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-600);
+}
+
+.login-error {
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.login-button {
+  background: var(--primary-gradient);
+  color: var(--primary-text);
+  border: none;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-deep);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-400);
+}
+
+.logout-button {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--ink-500);
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: var(--surface-soft);
+  color: var(--ink-800);
 }

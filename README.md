@@ -25,7 +25,9 @@ graph TD
     end
 
     subgraph Infrastructure["Infrastructure Layer (External)"]
-        Store[LocalStorage Adapter]
+        Adapter[Storage Adapters]
+        Supabase[Supabase API]
+        Local[LocalStorage]
         Log[Pino Logger]
     end
 
@@ -39,35 +41,48 @@ graph TD
 
 1.  **Domain**: Pure business logic, Zod schemas, and data structures. Zero external dependencies.
 2.  **Application**: Orchestration of user stories (Use Cases). Defines interfaces for infrastructure.
-3.  **Infrastructure**: Implementation of external services (Storage, Logging).
+3.  **Infrastructure**: Implementation of external services (Storage, Logging). Now includes **Supabase** for cloud sync.
 4.  **Presentation**: React UI components and state management.
+
+## Key Features
+
+### ☁️ Cloud Sync (Supabase)
+The application now supports **Supabase Persistence**, ensuring your class coverage data is saved across sessions and devices. 
+- **Identity-Based Locking**: Prevents synchronization race conditions.
+- **Fail-Safe Loading**: Robust error handling that aborts initialization on network failure to protect your cloud data from accidental wipes.
+
+### 👤 Guest Mode
+Teachers can choose to **Continue as Guest** to use the application entirely offline via LocalStorage. You can sign in at any time to sync your local work to your cloud profile.
+
+### 📊 Smart Priority & Weightage
+Question types are automatically ordered by their contribution to the active skill (High to Low), helping prioritize high-mark tasks.
 
 ## Formal Systems Enforcement
 
 This project strictly adheres to formal systems architecture rules to ensure behavioral correctness:
 
--   **Branded Types**: Distinct domain concepts (e.g., `ClassId`, `ModuleId`) use branded primitives to prevent accidental substitution.
--   **Explicit Error Algebra**: Failures are represented as structured domain values (using `Result<T, E>`) rather than exceptions.
--   **Closed State Machines**: Complex workflows (like session creation) are modeled as FSMs with explicit state transitions and payload validation (Rule 4 & 5).
--   **Boundary Validation**: All external data is strictly validated via Zod schemas at every entry point (Storage, Import).
--   **Pure Domain Logic**: The core logic is pure, deterministic, and easily testable.
+-   **Branded Types**: Distinct domain concepts (e.g., `ClassId`, `ModuleId`) use branded primitives.
+-   **Explicit Error Algebra**: Failures are represented as structured domain values (using `Result<T, E>`).
+-   **Closed State Machines**: Complex workflows are modeled as FSMs with explicit state transitions.
+-   **Boundary Validation**: All external data is strictly validated via Zod schemas at every entry point.
 
-## UI Features
+## Tech Stack
 
-### 1. Smart Sorting
-The application automatically orders question types by their contribution to the active skill (High to Low), helping students prioritize high-mark tasks.
-
-### 2. Guarded Actions
-Destructive operations such as **Resetting a Class** or **Removing a Class** are protected by in-app confirmation modals to prevent accidental data loss.
-
-## tech Stack
-
--   **Framework**: React + Vite
--   **Language**: TypeScript (Strict Mode)
+-   **Framework**: React 19 + Vite
+-   **Backend**: Supabase (Auth & Database)
+-   **Language**: TypeScript (Strictest Mode)
 -   **Validation**: Zod
--   **State Management**: React Context + Functional Types (`Result<T>`)
--   **Linting/Formatting**: oxlint + Prettier
--   **Testing**: Vitest + React Testing Library + dependency-cruiser
+-   **Styling**: Vanilla CSS (Premium Aesthetics)
+-   **Testing**: Vitest + React Testing Library (24/24 Tests Passing)
+
+## Setup
+
+### Environment Variables
+Create a `.env` file in the root directory:
+```env
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
 
 ## Scripts
 
@@ -75,11 +90,8 @@ Destructive operations such as **Resetting a Class** or **Removing a Class** are
 | -------------------- | --------------------------------------------------------------------------- |
 | `npm run dev`        | Start development server                                                    |
 | `npm run build`      | Build for production                                                        |
-| `npm run preview`    | Preview production build                                                    |
 | `npm run check`      | Run full verification suite (Format, Lint, Type-Check, Test, Architecture) |
-| `npm run lint`       | Run oxlint                                                                  |
-| `npm run format`     | Run Prettier                                                                |
-| `npm run test`       | Run Unit & Integration Tests                                                |
+| `npm run test`       | Run Automated Unit & Integration Tests                                      |
 | `npm run type-check` | Run TypeScript Compiler check                                               |
 
 ## Project Structure
@@ -88,7 +100,7 @@ Destructive operations such as **Resetting a Class** or **Removing a Class** are
 src/
 ├── domain/           # Pure business logic & types
 ├── application/      # Use cases & orchestration
-├── infrastructure/   # External services (Storage, Logger)
+├── infrastructure/   # External services (Supabase, LocalStorage, Logs)
 ├── presentation/     # React components & styles
 └── main.tsx          # Entry point
 ```
