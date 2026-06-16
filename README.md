@@ -24,6 +24,8 @@ This codebase enforces strict software safety systems using **Effect-TS**:
 - **Strict Boundary Validation**: Evaluates external data at boundaries (network requests, localStorage) using schemas that automatically repair, sanitize, or reject corrupted states.
 - **Algebraic Data Errors**: Custom errors inherit from `Data.TaggedError`, facilitating compile-time checks and pattern matching on failure cases.
 - **Pure State Machine Transitions**: Managed via a clean, state-driven workflow FSM (`SessionCreationFSM`) that checks transition invariants.
+- **State Immutability**: All actions and state transitions inside use cases use pure functional spreads instead of mutating state in-place, eliminating side effects.
+- **Property-Based Testing (`fast-check`)**: Core business rules and transition boundaries are validated against thousands of randomized inputs to guarantee correctness.
 
 ---
 
@@ -69,7 +71,7 @@ graph TD
 - **Effect Library**: Effect-TS (Core, Schema, Cause)
 - **Backend & Auth**: Supabase
 - **Styling**: Vanilla CSS (Premium Aesthetics, Dark Mode support)
-- **Testing**: Vitest + React Testing Library (100% tests passing)
+- **Testing**: Vitest + React Testing Library + fast-check (100% tests passing)
 
 ---
 
