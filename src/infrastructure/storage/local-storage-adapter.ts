@@ -26,15 +26,13 @@ export class LocalStorageAdapter implements StorageAdapter {
         );
       }
 
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return yield* Effect.fail(
-          new StorageError({ message: `Failed to parse local storage JSON: ${msg}` }),
-        );
-      }
+      const parsed = yield* Effect.try({
+        try: () => JSON.parse(raw),
+        catch: (e) =>
+          new StorageError({
+            message: `Failed to parse local storage JSON: ${e instanceof Error ? e.message : String(e)}`,
+          }),
+      });
 
       const decoded = Schema.decodeUnknownEither(AppStateSchema)(parsed);
       if (Either.isLeft(decoded)) {
@@ -57,14 +55,18 @@ export class LocalStorageAdapter implements StorageAdapter {
     return Effect.gen(function* () {
       const logger = yield* LoggerService;
       logger.info("Saving state to localStorage", { key });
-      try {
-        const serialized = JSON.stringify(state);
-        window.localStorage.setItem(key, serialized);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logger.error("Failed to save state to localStorage", { error: msg });
-        return yield* Effect.fail(new StorageError({ message: msg }));
-      }
+
+      yield* Effect.try({
+        try: () => {
+          const serialized = JSON.stringify(state);
+          window.localStorage.setItem(key, serialized);
+        },
+        catch: (e) => {
+          const msg = e instanceof Error ? e.message : String(e);
+          logger.error("Failed to save state to localStorage", { error: msg });
+          return new StorageError({ message: msg });
+        },
+      });
     });
   }
 }

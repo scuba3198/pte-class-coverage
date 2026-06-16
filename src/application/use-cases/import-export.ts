@@ -33,15 +33,13 @@ export class ImportDataUseCase {
       const logger = yield* LoggerService;
       logger.info("Executing ImportDataUseCase");
 
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(request.jsonData);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return yield* Effect.fail(
-          new ImportExportError({ message: `Failed to parse import JSON: ${msg}` }),
-        );
-      }
+      const parsed = yield* Effect.try({
+        try: () => JSON.parse(request.jsonData),
+        catch: (e) =>
+          new ImportExportError({
+            message: `Failed to parse import JSON: ${e instanceof Error ? e.message : String(e)}`,
+          }),
+      });
 
       const decoded = Schema.decodeUnknownEither(AppStateSchema)(parsed);
       if (Either.isLeft(decoded)) {
