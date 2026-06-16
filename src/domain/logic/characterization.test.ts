@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Either } from "effect";
 import { mergeStates, normalizeQuestionName } from "./session";
 import { weightageEntries } from "./coverage";
 import type { AppState, ClassId, QuestionTypeId, SessionId } from "../types";
@@ -8,20 +9,19 @@ describe("Characterization Tests (Current Behavior)", () => {
   describe("normalizeQuestionName", () => {
     it("strips non-alphanumeric characters and lowercases", () => {
       const r1 = normalizeQuestionName("Summarize Spoken Text");
-      expect(r1.ok).toBe(true);
-      if (r1.ok) expect(r1.value).toBe("summarizespokentext");
+      expect(Either.isRight(r1)).toBe(true);
+      if (Either.isRight(r1)) expect(r1.right).toBe("summarizespokentext");
 
       const r2 = normalizeQuestionName("Fill in the Blanks (Type In)");
-      expect(r2.ok).toBe(true);
-      if (r2.ok) expect(r2.value).toBe("fillintheblankstypein");
+      expect(Either.isRight(r2)).toBe(true);
+      if (Either.isRight(r2)) expect(r2.right).toBe("fillintheblankstypein");
     });
 
     it("returns an error for purely non-alphanumeric input", () => {
-      // Changed from previous "empty string" behavior to explicit Error
       const result = normalizeQuestionName("!!! ???");
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.message).toContain('Failed to normalize value: "!!! ???"');
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left.message).toContain('Failed to normalize value: "!!! ???"');
       }
     });
   });
@@ -32,7 +32,6 @@ describe("Characterization Tests (Current Behavior)", () => {
     const classRemote = { id: "c_remote" as ClassId, name: "Remote Class" };
 
     it("includes remote classes not present locally (non-destructive)", () => {
-      // Fixing the risk R1: now it SHOULD NOT drop remote classes
       const localState: AppState = {
         classes: [classLocal],
         coverage: { c_local: { q1: true } },
@@ -102,14 +101,19 @@ describe("Characterization Tests (Current Behavior)", () => {
     it("successfully maps legacy names to typed IDs", () => {
       const essayEntry = weightageEntries.find((e) => {
         const r = normalizeQuestionName(e.question);
-        return r.ok && r.value === "essay";
+        return Either.isRight(r) && r.right === "essay";
       });
       expect(essayEntry?.questionTypeId).toBe("write-essay");
 
       const mcqReading = weightageEntries.find((e) => {
         const rq = normalizeQuestionName(e.question);
         const rm = normalizeQuestionName(e.module);
-        return rq.ok && rq.value === "mcqmultiple" && rm.ok && rm.value === "reading";
+        return (
+          Either.isRight(rq) &&
+          rq.right === "mcqmultiple" &&
+          Either.isRight(rm) &&
+          rm.right === "reading"
+        );
       });
       expect(mcqReading?.questionTypeId).toBe("reading-mcma");
     });
@@ -119,7 +123,7 @@ describe("Characterization Tests (Current Behavior)", () => {
     it("allows valid module selection", () => {
       const fsm = new SessionCreationFSM();
       const result = fsm.transition({ type: "SELECT_MODULE", moduleId: "speaking" as any });
-      expect(result.ok).toBe(true);
+      expect(Either.isRight(result)).toBe(true);
       expect(fsm.state.type).toBe("ModuleSelected");
     });
 
@@ -127,16 +131,15 @@ describe("Characterization Tests (Current Behavior)", () => {
       const fsm = new SessionCreationFSM();
       fsm.transition({ type: "SELECT_MODULE", moduleId: "speaking" as any });
 
-      // "summarize-written-text" belongs to "writing", not "speaking"
       const result = fsm.transition({
         type: "SELECT_QUESTIONS",
         questionTypeIds: ["summarize-written-text" as any],
       });
 
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error).toBeInstanceOf(ValidationError);
-        expect(result.error.message).toContain("does not belong to module");
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left).toBeInstanceOf(ValidationError);
+        expect(result.left.message).toContain("does not belong to module");
       }
     });
 
@@ -149,7 +152,7 @@ describe("Characterization Tests (Current Behavior)", () => {
         questionTypeIds: ["read-aloud" as any],
       });
 
-      expect(result.ok).toBe(true);
+      expect(Either.isRight(result)).toBe(true);
       expect(fsm.state.type).toBe("QuestionsSelected");
     });
   });

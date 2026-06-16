@@ -1,89 +1,81 @@
-import { DomainError, err, ok, type Result } from "../../domain/result";
+import { Effect, Layer, Schema, Either } from "effect";
 import { AppStateSchema, type AppState } from "../../domain/types";
-import type { Logger } from "../logger";
+import { StorageService, StorageError, NotFoundError, ValidationError } from "./storage-service";
+import { LoggerService } from "../logger";
 
-/**
- * Base class for all storage-related errors.
- */
-export class StorageError extends DomainError {
-  constructor(message: string) {
-    super(message);
-  }
-}
+export { StorageError, NotFoundError, ValidationError };
 
-export class NotFoundError extends StorageError {
-  constructor(key: string) {
-    super(`State not found for key: ${key}`);
-  }
-}
-
-export class ValidationError extends StorageError {
-  constructor(details: string) {
-    super(`Validation failed: ${details}`);
-  }
-}
-
-/**
- * Interface for application state storage.
- */
 export interface StorageAdapter {
-  loadState(key: string): Promise<Result<AppState, StorageError>>;
-  saveState(key: string, state: AppState): Promise<Result<void, StorageError>>;
+  loadState(
+    key: string,
+  ): Effect.Effect<AppState, StorageError | NotFoundError | ValidationError, LoggerService>;
+  saveState(key: string, state: AppState): Effect.Effect<void, StorageError, LoggerService>;
 }
 
-/**
- * Implementation of StorageAdapter using window.localStorage.
- */
 export class LocalStorageAdapter implements StorageAdapter {
-  constructor(private readonly logger: Logger) {}
+  loadState(key: string) {
+    return Effect.gen(function* () {
+      const logger = yield* LoggerService;
+      logger.info("Loading state from localStorage", { key });
 
-  /**
-   * Loads and validates the application state from local storage.
-   */
-  async loadState(key: string): Promise<Result<AppState, StorageError>> {
-    try {
-      this.logger.info("Loading state from localStorage", { key });
       const raw = window.localStorage.getItem(key);
-
       if (!raw) {
-        this.logger.info("No state found in localStorage");
-        return err(new NotFoundError(key));
+        logger.info("No state found in localStorage");
+        return yield* Effect.fail(
+          new NotFoundError({ key, message: `State not found for key: ${key}` }),
+        );
       }
 
-      const parsed = JSON.parse(raw);
-      const result = AppStateSchema.safeParse(parsed);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return yield* Effect.fail(
+          new StorageError({ message: `Failed to parse local storage JSON: ${msg}` }),
+        );
+      }
 
-      if (!result.success) {
-        const errorDetails = result.error.errors
-          .map((e) => `${e.path.join(".")}: ${e.message}`)
-          .join(", ");
-        this.logger.warn("LocalStorage data failed Zod validation", {
-          errors: result.error.errors,
+      const decoded = Schema.decodeUnknownEither(AppStateSchema)(parsed);
+      if (Either.isLeft(decoded)) {
+        logger.warn("LocalStorage data failed Schema validation", {
+          errors: decoded.left,
         });
-        return err(new ValidationError(errorDetails));
+        return yield* Effect.fail(
+          new ValidationError({
+            details: String(decoded.left),
+            message: `Validation failed: ${String(decoded.left)}`,
+          }),
+        );
       }
 
-      return ok(result.data);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      this.logger.error("Failed to load state from localStorage", { error: message });
-      return err(new StorageError(message));
-    }
+      return decoded.right;
+    });
   }
 
-  /**
-   * Serializes and saves the application state to local storage.
-   */
-  async saveState(key: string, state: AppState): Promise<Result<void, StorageError>> {
-    try {
-      this.logger.info("Saving state to localStorage", { key });
-      const serialized = JSON.stringify(state);
-      window.localStorage.setItem(key, serialized);
-      return ok(undefined);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      this.logger.error("Failed to save state to localStorage", { error: message });
-      return err(new StorageError(message));
-    }
+  saveState(key: string, state: AppState) {
+    return Effect.gen(function* () {
+      const logger = yield* LoggerService;
+      logger.info("Saving state to localStorage", { key });
+      try {
+        const serialized = JSON.stringify(state);
+        window.localStorage.setItem(key, serialized);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        logger.error("Failed to save state to localStorage", { error: msg });
+        return yield* Effect.fail(new StorageError({ message: msg }));
+      }
+    });
   }
 }
+
+export const LocalStorageLive = Layer.effect(
+  StorageService,
+  Effect.sync(() => {
+    const adapter = new LocalStorageAdapter();
+    return StorageService.of({
+      loadState: (key) => adapter.loadState(key),
+      saveState: (key, state) => adapter.saveState(key, state),
+    });
+  }),
+);

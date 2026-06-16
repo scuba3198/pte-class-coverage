@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import { modules } from "../data/modules";
 import { weightageChart } from "../data/weightage";
 import {
@@ -23,7 +24,9 @@ const questionTypeNameToId = new Map<string, QuestionTypeId>(
   modules.flatMap((module) =>
     module.questionTypes.flatMap((questionType) => {
       const normalized = normalizeQuestionName(questionType.name);
-      return normalized.ok ? [[`${normalized.value}|${module.id}`, questionType.id]] : [];
+      return Either.isRight(normalized)
+        ? [[`${normalized.right}|${module.id}`, questionType.id]]
+        : [];
     }),
   ),
 );
@@ -56,9 +59,9 @@ export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
   .map((entry) => {
     const moduleId = moduleNameToId[entry.module] || createModuleId("speaking");
     const normalized = normalizeQuestionName(entry.question);
-    const questionTypeId = normalized.ok
-      ? questionTypeNameToId.get(`${normalized.value}|${moduleId}`) ||
-        questionTypeAliases.get(`${normalized.value}|${moduleId}`)
+    const questionTypeId = Either.isRight(normalized)
+      ? questionTypeNameToId.get(`${normalized.right}|${moduleId}`) ||
+        questionTypeAliases.get(`${normalized.right}|${moduleId}`)
       : undefined;
     return {
       ...entry,
@@ -84,14 +87,14 @@ export const allQuestionTypeIds = modules.flatMap((module) =>
 const forcedEntriesBySkill: Partial<Record<SkillKey, Set<string>>> = {
   writing: new Set(
     [normalizeQuestionName("Summarize Spoken Text")]
-      .filter((r): r is { ok: true; value: string } => r.ok)
-      .map((r) => r.value),
+      .filter((r): r is Either.Right<never, string> => Either.isRight(r))
+      .map((r) => r.right),
   ),
   listening: new Set(
     ["Highlight Incorrect Words", "Fill in the Blanks (Type In)"]
       .map((n) => normalizeQuestionName(n))
-      .filter((r): r is { ok: true; value: string } => r.ok)
-      .map((r) => r.value),
+      .filter((r): r is Either.Right<never, string> => Either.isRight(r))
+      .map((r) => r.right),
   ),
 };
 
@@ -105,14 +108,14 @@ export const getCoverageEntriesForSkill = (
   const forcedNames = forcedEntriesBySkill[skill] || new Set<string>();
   const forcedEntries = weightageEntries.filter((entry) => {
     const normalized = normalizeQuestionName(entry.question);
-    return normalized.ok && forcedNames.has(normalized.value);
+    return Either.isRight(normalized) && forcedNames.has(normalized.right);
   });
 
   const entries = weightageEntries
     .filter((entry) => entry.scores[skill])
     .filter((entry) => {
       const normalized = normalizeQuestionName(entry.question);
-      return !normalized.ok || !forcedNames.has(normalized.value);
+      return !Either.isRight(normalized) || !forcedNames.has(normalized.right);
     })
     .sort((a, b) => (b.scores[skill] || 0) - (a.scores[skill] || 0));
 

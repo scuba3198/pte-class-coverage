@@ -1,24 +1,21 @@
+import { Either, Data } from "effect";
 import type { ModuleId, QuestionTypeId, Session } from "../types";
-import { DomainError, err, ok, type Result } from "../result";
 import { getModuleIdByQuestionTypeId } from "./coverage";
 
 /**
  * Errors related to workflow transitions.
  */
-export class TransitionError extends DomainError {
-  constructor(from: string, to: string) {
-    super(`Illegal transition from ${from} to ${to}`);
-  }
-}
+export class TransitionError extends Data.TaggedError("TransitionError")<{
+  readonly from: string;
+  readonly to: string;
+}> {}
 
 /**
  * Errors related to invalid action payloads.
  */
-export class ValidationError extends DomainError {
-  constructor(message: string) {
-    super(`Validation failed: ${message}`);
-  }
-}
+export class ValidationError extends Data.TaggedError("ValidationError")<{
+  readonly message: string;
+}> {}
 
 /**
  * States for the Session Creation workflow.
@@ -54,63 +51,67 @@ export class SessionCreationFSM {
   private validateQuestions(
     moduleId: ModuleId,
     questionTypeIds: QuestionTypeId[],
-  ): Result<void, ValidationError> {
+  ): Either.Either<void, ValidationError> {
     for (const qId of questionTypeIds) {
       const originModuleId = getModuleIdByQuestionTypeId(qId);
       if (originModuleId !== moduleId) {
-        return err(new ValidationError(`Question ${qId} does not belong to module ${moduleId}`));
+        return Either.left(
+          new ValidationError({ message: `Question ${qId} does not belong to module ${moduleId}` }),
+        );
       }
     }
-    return ok(undefined);
+    return Either.right(undefined);
   }
 
   /**
    * Transition to a new state based on an event.
    */
-  transition(event: SessionCreationEvent): Result<SessionCreationState, DomainError> {
+  transition(
+    event: SessionCreationEvent,
+  ): Either.Either<SessionCreationState, TransitionError | ValidationError> {
     const currentState = this._state;
 
     switch (currentState.type) {
       case "Idle":
         if (event.type === "SELECT_MODULE") {
           this._state = { type: "ModuleSelected", moduleId: event.moduleId };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         break;
 
       case "ModuleSelected":
         if (event.type === "SELECT_QUESTIONS") {
           const validation = this.validateQuestions(currentState.moduleId, event.questionTypeIds);
-          if (!validation.ok) return validation;
+          if (Either.isLeft(validation)) return validation;
 
           this._state = {
             type: "QuestionsSelected",
             moduleId: currentState.moduleId,
             questionTypeIds: event.questionTypeIds,
           };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         if (event.type === "CANCEL") {
           this._state = { type: "Idle" };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         break;
 
       case "QuestionsSelected":
         if (event.type === "CONFIRM_SESSION") {
           this._state = { type: "Completing", session: event.session };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         if (event.type === "SELECT_QUESTIONS") {
           const validation = this.validateQuestions(currentState.moduleId, event.questionTypeIds);
-          if (!validation.ok) return validation;
+          if (Either.isLeft(validation)) return validation;
 
           this._state = { ...currentState, questionTypeIds: event.questionTypeIds };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         if (event.type === "CANCEL") {
           this._state = { type: "Idle" };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         break;
 
@@ -118,11 +119,11 @@ export class SessionCreationFSM {
         // Terminal state or reset
         if (event.type === "CANCEL") {
           this._state = { type: "Idle" };
-          return ok(this._state);
+          return Either.right(this._state);
         }
         break;
     }
 
-    return err(new TransitionError(currentState.type, event.type));
+    return Either.left(new TransitionError({ from: currentState.type, to: event.type }));
   }
 }

@@ -1,8 +1,7 @@
-import { ok, type Result } from "../../domain/result";
+import { Effect } from "effect";
 import type { AppState } from "../../domain/types";
-import type { Logger } from "../../infrastructure/logger";
-import type { StorageAdapter } from "../../infrastructure/storage/local-storage-adapter";
-import type { CorrelationId, UseCase } from "../types";
+import { StorageService } from "../../infrastructure/storage/storage-service";
+import { LoggerService } from "../../infrastructure/logger";
 
 export interface SaveStateRequest {
   storageKey: string;
@@ -12,26 +11,17 @@ export interface SaveStateRequest {
 /**
  * Use case for saving the application state to storage.
  */
-export class SaveStateUseCase implements UseCase<SaveStateRequest, Result<void>> {
-  constructor(
-    private readonly logger: Logger,
-    private readonly storage: StorageAdapter,
-  ) {}
+export class SaveStateUseCase {
+  execute(request: SaveStateRequest) {
+    return Effect.gen(function* () {
+      const storage = yield* StorageService;
+      const logger = yield* LoggerService;
+      logger.info("Executing SaveStateUseCase", {
+        storageKey: request.storageKey,
+      });
 
-  async execute(request: SaveStateRequest, correlationId: CorrelationId): Promise<Result<void>> {
-    this.logger.info("Executing SaveStateUseCase", {
-      correlationId,
-      storageKey: request.storageKey,
+      yield* storage.saveState(request.storageKey, request.state);
+      logger.info("State saved successfully");
     });
-
-    const result = await this.storage.saveState(request.storageKey, request.state);
-
-    if (result.ok) {
-      this.logger.info("State saved successfully", { correlationId });
-      return ok(undefined);
-    }
-
-    this.logger.error("Failed to save state", { correlationId, error: result.error.message });
-    return result;
   }
 }

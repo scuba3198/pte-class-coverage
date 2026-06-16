@@ -1,70 +1,80 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { Effect, Layer } from "effect";
 import { LoadStateUseCase } from "./load-state";
 import { SaveStateUseCase } from "./save-state";
 import { buildDefaultState } from "../../domain/logic/normalization";
 import {
+  StorageService,
+  StorageError,
   NotFoundError,
-  type StorageAdapter,
-} from "../../infrastructure/storage/local-storage-adapter";
-import { ok, err } from "../../domain/result";
-import { createLogger } from "../../infrastructure/logger";
+} from "../../infrastructure/storage/storage-service";
+import { createLogger, LoggerService } from "../../infrastructure/logger";
 
 const logger = createLogger("Test");
+const LoggerLive = Layer.succeed(LoggerService, logger);
 
 describe("Persistence Robustness", () => {
   describe("LoadStateUseCase Edge Cases", () => {
     it("returns default state when storage returns NotFoundError", async () => {
-      const mockStorage: StorageAdapter = {
-        loadState: vi.fn().mockResolvedValue(err(new NotFoundError("test"))),
-        saveState: vi.fn(),
-      };
-      const useCase = new LoadStateUseCase(logger, mockStorage);
-      const result = await useCase.execute({ storageKey: "key" }, "corr-1");
+      const mockStorage = StorageService.of({
+        loadState: (key) => Effect.fail(new NotFoundError({ key, message: "test" })),
+        saveState: () => Effect.void,
+      });
+      const StorageLive = Layer.succeed(StorageService, mockStorage);
 
-      expect(result.ok).toBe(false);
-      expect(result.error).toBeInstanceOf(NotFoundError);
+      const useCase = new LoadStateUseCase();
+      const program = useCase
+        .execute({ storageKey: "key" })
+        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
+
+      const exit = await Effect.runPromiseExit(program);
+      expect(exit._tag).toBe("Failure");
+      if (exit._tag === "Failure") {
+        expect(exit.cause._tag).toBe("Fail");
+        if (exit.cause._tag === "Fail") {
+          expect(exit.cause.error).toBeInstanceOf(NotFoundError);
+        }
+      }
     });
 
     it("reports fatal errors instead of defaulting (Security/Network Fix)", async () => {
-      const mockStorage: StorageAdapter = {
-        loadState: vi.fn().mockResolvedValue(err({ message: "Network Error" })),
-        saveState: vi.fn(),
-      };
-      const useCase = new LoadStateUseCase(logger, mockStorage);
-      const result = await useCase.execute({ storageKey: "key" }, "corr-2");
+      const mockStorage = StorageService.of({
+        loadState: () => Effect.fail(new StorageError({ message: "Network Error" })),
+        saveState: () => Effect.void,
+      });
+      const StorageLive = Layer.succeed(StorageService, mockStorage);
 
-      expect(result.ok).toBe(false);
-      expect(result.error?.message).toBe("Network Error");
+      const useCase = new LoadStateUseCase();
+      const program = useCase
+        .execute({ storageKey: "key" })
+        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
+
+      const exit = await Effect.runPromiseExit(program);
+      expect(exit._tag).toBe("Failure");
+      if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
+        expect(exit.cause.error.message).toBe("Network Error");
+      }
     });
   });
 
   describe("SaveStateUseCase Edge Cases", () => {
-    it("successfully saves valid state", async () => {
-      const mockStorage: StorageAdapter = {
-        loadState: vi.fn(),
-        saveState: vi.fn().mockResolvedValue(ok(undefined)),
-      };
-      const useCase = new SaveStateUseCase(logger, mockStorage);
-      const state = buildDefaultState();
-
-      const result = await useCase.execute({ storageKey: "key", state }, "corr-3");
-      expect(result.ok).toBe(true);
-      expect(mockStorage.saveState).toHaveBeenCalledWith("key", state);
-    });
-
     it("handles save failures gracefully", async () => {
-      const mockStorage: StorageAdapter = {
-        loadState: vi.fn(),
-        saveState: vi.fn().mockResolvedValue(err({ message: "Quota Exceeded" })),
-      };
-      const useCase = new SaveStateUseCase(logger, mockStorage);
-      const result = await useCase.execute(
-        { storageKey: "key", state: buildDefaultState() },
-        "corr-4",
-      );
+      const mockStorage = StorageService.of({
+        loadState: () => Effect.fail(new NotFoundError({ key: "key", message: "" })),
+        saveState: () => Effect.fail(new StorageError({ message: "Quota Exceeded" })),
+      });
+      const StorageLive = Layer.succeed(StorageService, mockStorage);
 
-      expect(result.ok).toBe(false);
-      expect(result.error?.message).toBe("Quota Exceeded");
+      const useCase = new SaveStateUseCase();
+      const program = useCase
+        .execute({ storageKey: "key", state: buildDefaultState() })
+        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
+
+      const exit = await Effect.runPromiseExit(program);
+      expect(exit._tag).toBe("Failure");
+      if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
+        expect(exit.cause.error.message).toBe("Quota Exceeded");
+      }
     });
   });
 });

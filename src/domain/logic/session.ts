@@ -1,4 +1,4 @@
-import { err, ok, type Result, NormalizationError } from "../result";
+import { Either, Data } from "effect";
 import {
   createSessionIdPrimitive,
   type AppState,
@@ -8,15 +8,23 @@ import {
   type SessionId,
 } from "../types";
 
+export class NormalizationError extends Data.TaggedError("NormalizationError")<{
+  readonly value: string;
+}> {
+  get message() {
+    return `Failed to normalize value: "${this.value}"`;
+  }
+}
+
 /**
  * Normalizes a question name for lookup (lowercase, alphanumeric only).
  */
-export const normalizeQuestionName = (value: string): Result<string, NormalizationError> => {
+export const normalizeQuestionName = (value: string): Either.Either<string, NormalizationError> => {
   const normalized = value.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!normalized) {
-    return err(new NormalizationError(value));
+    return Either.left(new NormalizationError({ value }));
   }
-  return ok(normalized);
+  return Either.right(normalized);
 };
 
 /**
@@ -68,10 +76,6 @@ export const mergeStates = (
       a.date.localeCompare(b.date),
     );
   });
-
-  // Cleanup orphans: if a session mapping exists for a class not in mergedClasses, it's an orphan.
-  // The current loop above only processes classes in mergedClasses, so we effectively
-  // drop sessions for non-existent classes by not adding them to the new `sessions` object.
 
   return {
     classes: mergedClasses,
