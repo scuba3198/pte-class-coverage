@@ -43,7 +43,7 @@ interface AppContextValue {
 export const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>(buildDefaultState());
+  const [state, setState] = useState<AppState>(() => buildDefaultState());
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isGuestMode, setIsGuestMode] = useState(false);
