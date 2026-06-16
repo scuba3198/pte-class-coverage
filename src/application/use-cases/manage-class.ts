@@ -3,12 +3,13 @@ import { classDefaults } from "../../domain/data/class-defaults";
 import { normalizeState } from "../../domain/logic/normalization";
 import { allQuestionTypeIds } from "../../domain/logic/coverage";
 import type { AppState } from "../../domain/types";
+import { createClassId, type ClassId } from "../../domain/types";
 import { LoggerService } from "../../infrastructure/logger";
 
 export type ClassAction =
   | { type: "ADD_CLASS"; name: string }
-  | { type: "REMOVE_CLASS"; classId: string }
-  | { type: "RESET_CLASS"; classId: string };
+  | { type: "REMOVE_CLASS"; classId: ClassId }
+  | { type: "RESET_CLASS"; classId: ClassId };
 
 export interface ManageClassRequest {
   state: AppState;
@@ -17,6 +18,7 @@ export interface ManageClassRequest {
 
 /**
  * Use case for managing classes (adding, removing, resetting) using Effect.
+ * Employs pure immutable state updates and respects domain type brands.
  */
 export class ManageClassUseCase {
   execute(request: ManageClassRequest) {
@@ -36,13 +38,13 @@ export class ManageClassUseCase {
         const classId =
           defaultMatch && !nextState.classes.some((c) => c.id === defaultMatch.id)
             ? defaultMatch.id
-            : `class-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            : createClassId(`class-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
-        nextState.classes.push({ id: classId as any, name });
+        const newClasses = [...nextState.classes, { id: classId, name }];
 
         // Sort classes to keep defaults first
         const defaultOrder = classDefaults.map((c) => c.id);
-        nextState.classes.sort((a, b) => {
+        const sortedClasses = [...newClasses].sort((a, b) => {
           const idxA = defaultOrder.indexOf(a.id);
           const idxB = defaultOrder.indexOf(b.id);
           if (idxA !== -1 && idxB !== -1) return idxA - idxB;
@@ -51,28 +53,62 @@ export class ManageClassUseCase {
           return a.name.localeCompare(b.name);
         });
 
-        nextState.coverage[classId as any] = {};
+        const newCoverageRecord: Record<string, boolean> = {};
         allQuestionTypeIds.forEach((id) => {
-          nextState.coverage[classId as any][id] = false;
+          newCoverageRecord[id] = false;
         });
-        nextState.sessions[classId as any] = [];
+
+        return {
+          ...nextState,
+          classes: sortedClasses,
+          coverage: {
+            ...nextState.coverage,
+            [classId]: newCoverageRecord,
+          },
+          sessions: {
+            ...nextState.sessions,
+            [classId]: [],
+          },
+        };
       } else if (request.action.type === "REMOVE_CLASS") {
         const { classId } = request.action;
         if (nextState.classes.length <= 1) return nextState;
 
-        nextState.classes = nextState.classes.filter((c) => c.id !== classId);
-        delete nextState.coverage[classId as any];
-        delete nextState.sessions[classId as any];
+        const newClasses = nextState.classes.filter((c) => c.id !== classId);
+
+        const newCoverage = { ...nextState.coverage };
+        delete newCoverage[classId];
+
+        const newSessions = { ...nextState.sessions };
+        delete newSessions[classId];
+
+        return {
+          ...nextState,
+          classes: newClasses,
+          coverage: newCoverage,
+          sessions: newSessions,
+        };
       } else if (request.action.type === "RESET_CLASS") {
         const { classId } = request.action;
-        if (nextState.coverage[classId as any]) {
-          Object.keys(nextState.coverage[classId as any]).forEach((id) => {
-            nextState.coverage[classId as any][id as any] = false;
+        const newCoverage = { ...nextState.coverage };
+        if (newCoverage[classId]) {
+          const resetRecord: Record<string, boolean> = {};
+          Object.keys(newCoverage[classId]).forEach((id) => {
+            resetRecord[id] = false;
           });
+          newCoverage[classId] = resetRecord;
         }
-        if (nextState.sessions[classId as any]) {
-          nextState.sessions[classId as any] = [];
+
+        const newSessions = { ...nextState.sessions };
+        if (newSessions[classId]) {
+          newSessions[classId] = [];
         }
+
+        return {
+          ...nextState,
+          coverage: newCoverage,
+          sessions: newSessions,
+        };
       }
 
       return nextState;

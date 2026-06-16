@@ -65,10 +65,17 @@ export const mergeStates = (
     });
 
     const mergedSessionsMap = new Map<SessionId, Session>();
-    remoteState.sessions[classItem.id]?.forEach((session) => {
+    const remoteSessions = Array.isArray(remoteState.sessions[classItem.id])
+      ? remoteState.sessions[classItem.id]
+      : [];
+    remoteSessions.forEach((session) => {
       mergedSessionsMap.set(session.id, session);
     });
-    localState.sessions[classItem.id]?.forEach((session) => {
+
+    const localSessions = Array.isArray(localState.sessions[classItem.id])
+      ? localState.sessions[classItem.id]
+      : [];
+    localSessions.forEach((session) => {
       mergedSessionsMap.set(session.id, session);
     });
 

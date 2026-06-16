@@ -1,19 +1,26 @@
 import { Effect } from "effect";
 import { createSessionId } from "../../domain/logic/session";
 import { normalizeState } from "../../domain/logic/normalization";
-import type { AppState, Session } from "../../domain/types";
+import type {
+  AppState,
+  Session,
+  ClassId,
+  ModuleId,
+  QuestionTypeId,
+  SessionId,
+} from "../../domain/types";
 import { LoggerService } from "../../infrastructure/logger";
 
 export type SessionAction =
   | {
       type: "TOGGLE_ITEM";
-      classId: string;
+      classId: ClassId;
       date: string;
-      moduleId: string;
-      questionTypeId: string;
+      moduleId: ModuleId;
+      questionTypeId: QuestionTypeId;
       applyToCoverage: boolean;
     }
-  | { type: "DELETE_SESSION"; classId: string; sessionId: string };
+  | { type: "DELETE_SESSION"; classId: ClassId; sessionId: SessionId };
 
 export interface ManageSessionRequest {
   state: AppState;
@@ -22,6 +29,7 @@ export interface ManageSessionRequest {
 
 /**
  * Use case for managing class sessions (adding, toggling items, deleting) with Effect.
+ * Implements clean immutable state transformations and type brand checking.
  */
 export class ManageSessionUseCase {
   execute(request: ManageSessionRequest) {
@@ -44,41 +52,57 @@ export class ManageSessionUseCase {
           ? currentSelection.filter((id) => id !== questionTypeId)
           : [...currentSelection, questionTypeId];
 
+        let updatedSessions: Session[];
         if (!nextSelection.length) {
-          if (existingIndex !== -1) {
-            sessions.splice(existingIndex, 1);
-          }
+          updatedSessions = sessions.filter((_, idx) => idx !== existingIndex);
         } else {
           const sessionId = existingIndex !== -1 ? sessions[existingIndex].id : createSessionId();
           const sessionEntry: Session = {
             id: sessionId,
             date,
-            moduleId: moduleId as any,
+            moduleId,
             questionTypeIds: nextSelection,
             note: existingIndex !== -1 ? sessions[existingIndex].note : "",
           };
 
           if (existingIndex !== -1) {
-            sessions[existingIndex] = sessionEntry;
+            updatedSessions = sessions.map((s, idx) => (idx === existingIndex ? sessionEntry : s));
           } else {
-            sessions.push(sessionEntry);
+            updatedSessions = [...sessions, sessionEntry];
           }
-          sessions.sort((a, b) => a.date.localeCompare(b.date));
+          updatedSessions = [...updatedSessions].sort((a, b) => a.date.localeCompare(b.date));
         }
 
-        nextState.sessions[classId] = sessions;
+        const newSessionsMap = {
+          ...nextState.sessions,
+          [classId]: updatedSessions,
+        };
 
+        const newCoverageMap = { ...nextState.coverage };
         if (applyToCoverage && nextSelection.includes(questionTypeId)) {
-          if (!nextState.coverage[classId]) nextState.coverage[classId] = {};
-          nextState.coverage[classId][questionTypeId] = true;
+          newCoverageMap[classId] = {
+            ...newCoverageMap[classId],
+            [questionTypeId]: true,
+          };
         }
+
+        return {
+          ...nextState,
+          sessions: newSessionsMap,
+          coverage: newCoverageMap,
+        };
       } else if (request.action.type === "DELETE_SESSION") {
         const { classId, sessionId } = request.action;
-        if (nextState.sessions[classId]) {
-          nextState.sessions[classId] = nextState.sessions[classId].filter(
-            (s) => s.id !== sessionId,
-          );
-        }
+        const sessions = nextState.sessions[classId] || [];
+        const updatedSessions = sessions.filter((s) => s.id !== sessionId);
+
+        return {
+          ...nextState,
+          sessions: {
+            ...nextState.sessions,
+            [classId]: updatedSessions,
+          },
+        };
       }
 
       return nextState;
