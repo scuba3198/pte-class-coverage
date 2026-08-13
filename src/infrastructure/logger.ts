@@ -1,30 +1,14 @@
-import { Context } from "effect";
-import pino from "pino";
-
-/**
- * Interface for the application logger.
- */
 export interface Logger {
   info(msg: string, data?: Record<string, unknown>): void;
   warn(msg: string, data?: Record<string, unknown>): void;
   error(msg: string, data?: Record<string, unknown>): void;
 }
 
-export class LoggerService extends Context.Tag("LoggerService")<LoggerService, Logger>() {}
-
-/**
- * Creates a configured pino logger instance for the browser.
- */
+/** Browser logging is enough here; keeping it as a tiny interface makes calls easy to test. */
 export const createLogger = (name: string): Logger => {
-  const logger = pino({
-    name,
-    browser: { asObject: true },
-    level: "info",
-  });
-
   return {
-    info: (msg, data) => logger.info(data, msg),
-    warn: (msg, data) => logger.warn(data, msg),
-    error: (msg, data) => logger.error(data, msg),
+    info: (msg, data) => console.info(`[${name}] ${msg}`, data ?? ""),
+    warn: (msg, data) => console.warn(`[${name}] ${msg}`, data ?? ""),
+    error: (msg, data) => console.error(`[${name}] ${msg}`, data ?? ""),
   };
 };

@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import * as fc from "fast-check";
 import { Either } from "effect";
 import { normalizeQuestionName, mergeStates } from "./session";
-import { SessionCreationFSM } from "./workflow-fsm";
 import { buildDefaultState } from "./normalization";
-import type { AppState, ClassId, QuestionTypeId, ModuleId } from "../types";
+import type { AppState, ClassId, QuestionTypeId } from "../types";
 
 describe("Property-Based Tests (fast-check)", () => {
   describe("normalizeQuestionName properties", () => {
@@ -47,30 +46,6 @@ describe("Property-Based Tests (fast-check)", () => {
             return false;
           },
         ),
-      );
-    });
-  });
-
-  describe("SessionCreationFSM properties", () => {
-    it("should transition from Idle to ModuleSelected for any valid ModuleId", () => {
-      const validModules: ModuleId[] = [
-        "speaking" as ModuleId,
-        "writing" as ModuleId,
-        "reading" as ModuleId,
-        "listening" as ModuleId,
-      ];
-      fc.assert(
-        fc.property(fc.constantFrom(...validModules), (moduleId) => {
-          const fsm = new SessionCreationFSM();
-          const result = fsm.transition({ type: "SELECT_MODULE", moduleId });
-
-          expect(Either.isRight(result)).toBe(true);
-          expect(fsm.state.type).toBe("ModuleSelected");
-          if (fsm.state.type === "ModuleSelected") {
-            expect(fsm.state.moduleId).toBe(moduleId);
-          }
-          return true;
-        }),
       );
     });
   });

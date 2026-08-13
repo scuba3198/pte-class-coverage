@@ -1,19 +1,16 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { Effect, Layer } from "effect";
 import { buildDefaultState } from "../../domain/logic/normalization";
 import type { AppState, ClassId, QuestionTypeId } from "../../domain/types";
-import { LoadStateUseCase } from "../../application/use-cases/load-state";
-import { SaveStateUseCase } from "../../application/use-cases/save-state";
-import { ToggleCoverageUseCase } from "../../application/use-cases/toggle-coverage";
-import {
-  ManageSessionUseCase,
-  type SessionAction,
-} from "../../application/use-cases/manage-session";
-import { ManageClassUseCase, type ClassAction } from "../../application/use-cases/manage-class";
-import { ExportDataUseCase, ImportDataUseCase } from "../../application/use-cases/import-export";
-import { createLogger, LoggerService } from "../../infrastructure/logger";
-import { LocalStorageLive } from "../../infrastructure/storage/local-storage-adapter";
-import { SupabaseStorageLive } from "../../infrastructure/storage/supabase-storage-adapter";
+import { loadState } from "../../application/use-cases/load-state";
+import { saveState } from "../../application/use-cases/save-state";
+import { toggleCoverage } from "../../application/use-cases/toggle-coverage";
+import { manageSession, type SessionAction } from "../../application/use-cases/manage-session";
+import { manageClass, type ClassAction } from "../../application/use-cases/manage-class";
+import { exportData, importData } from "../../application/use-cases/import-export";
+import { createLogger } from "../../infrastructure/logger";
+import { localStorageService } from "../../infrastructure/storage/local-storage-adapter";
+import { supabaseStorageService } from "../../infrastructure/storage/supabase-storage-adapter";
+import { NotFoundError, type StorageService } from "../../infrastructure/storage/storage-service";
 import { supabase } from "../../infrastructure/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -59,18 +56,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const logger = useMemo(() => createLogger("App"), []);
-  const LoggerLive = useMemo(() => Layer.succeed(LoggerService, logger), [logger]);
-
-  // Storage selection layer
-  const storageLayer = useMemo(() => {
-    if (user) return SupabaseStorageLive;
-    return LocalStorageLive;
+  const storage = useMemo<StorageService>(() => {
+    if (user) return supabaseStorageService;
+    return localStorageService;
   }, [user]);
-
-  // Combined App Layer
-  const appLayer = useMemo(() => {
-    return Layer.merge(LoggerLive, storageLayer);
-  }, [LoggerLive, storageLayer]);
 
   // Track which storage type has been successfully loaded
   const [initializedStorage, setInitializedStorage] = useState<"supabase" | "local" | null>(null);
@@ -125,15 +114,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem("pte-tracker-theme", theme);
   }, [theme]);
 
-  // UseCases
-  const loadStateUseCase = useMemo(() => new LoadStateUseCase(), []);
-  const saveStateUseCase = useMemo(() => new SaveStateUseCase(), []);
-  const toggleCoverageUseCase = useMemo(() => new ToggleCoverageUseCase(), []);
-  const manageSessionUseCase = useMemo(() => new ManageSessionUseCase(), []);
-  const manageClassUseCase = useMemo(() => new ManageClassUseCase(), []);
-  const exportDataUseCase = useMemo(() => new ExportDataUseCase(), []);
-  const importDataUseCase = useMemo(() => new ImportDataUseCase(), []);
-
   const generateCorrelationId = () => `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   const refreshState = useCallback(
@@ -150,30 +130,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         correlationId,
       });
 
-      const program = loadStateUseCase.execute({ storageKey: STORAGE_KEY });
-
       try {
-        const exit = await Effect.runPromiseExit(Effect.provide(program, appLayer));
-
-        // Verify this is still the active (latest) refresh request
-        if (activeRefreshIdRef.current !== correlationId) {
-          logger.info("Refresh preempted by newer request, discarding", { correlationId });
-          return;
-        }
-
         const currentStorageType = user ? "supabase" : "local";
 
-        if (exit._tag === "Success") {
-          setState(exit.value);
+        try {
+          const loadedState = await loadState(storage, { storageKey: STORAGE_KEY });
+          if (activeRefreshIdRef.current !== correlationId) {
+            logger.info("Refresh preempted by newer request, discarding", { correlationId });
+            return;
+          }
+          setState(loadedState);
           setInitializedStorage(currentStorageType);
-        } else {
-          const cause = exit.cause;
-          if (cause._tag === "Fail" && cause.error._tag === "NotFoundError") {
+        } catch (error) {
+          if (activeRefreshIdRef.current !== correlationId) {
+            logger.info("Refresh preempted by newer request, discarding", { correlationId });
+            return;
+          }
+          if (error instanceof NotFoundError) {
             logger.info("No state found in storage, using default", { correlationId });
             setState(buildDefaultState());
             setInitializedStorage(currentStorageType);
           } else {
-            const errorMsg = cause._tag === "Fail" ? cause.error.message : "Unexpected error";
+            const errorMsg = error instanceof Error ? error.message : "Unexpected error";
             logger.error(
               "State load failed with a serious error. Aborting initialization to protect cloud data.",
               {
@@ -192,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     },
-    [loadStateUseCase, user, appLayer, logger],
+    [storage, user, logger],
   );
 
   // Handle storage transitions (refresh when user/storage changes)
@@ -213,46 +191,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const program = saveStateUseCase.execute({ storageKey: STORAGE_KEY, state });
-    Effect.runPromise(Effect.provide(program, appLayer));
-  }, [state, initializedStorage, user, isLoading, saveStateUseCase, appLayer]);
+    void saveState(storage, { storageKey: STORAGE_KEY, state }).catch((error) =>
+      logger.error("State save failed", { error }),
+    );
+  }, [state, initializedStorage, user, isLoading, storage, logger]);
 
   const wrappedActions = useMemo(
     () => ({
       toggleCoverage: async (classId: ClassId, questionTypeId: QuestionTypeId) => {
-        const program = toggleCoverageUseCase.execute({
+        setState(toggleCoverage({
           state: stateRef.current,
           classId,
           questionTypeId,
-        });
-        const nextState = await Effect.runPromise(Effect.provide(program, appLayer));
-        setState(nextState);
+        }));
       },
       manageSession: async (action: SessionAction) => {
-        const program = manageSessionUseCase.execute({ state: stateRef.current, action });
-        const nextState = await Effect.runPromise(Effect.provide(program, appLayer));
-        setState(nextState);
+        setState(manageSession({ state: stateRef.current, action }));
       },
       manageClass: async (action: ClassAction) => {
-        const program = manageClassUseCase.execute({ state: stateRef.current, action });
-        const nextState = await Effect.runPromise(Effect.provide(program, appLayer));
-        setState(nextState);
+        setState(manageClass({ state: stateRef.current, action }));
       },
       exportData: async (filename: string) => {
-        const program = exportDataUseCase.execute({ state: stateRef.current, filename });
-        await Effect.runPromise(Effect.provide(program, appLayer));
+        exportData({ state: stateRef.current, filename });
       },
       importData: async (
         jsonData: string,
       ): Promise<{ ok: true; value: undefined } | { ok: false; error: Error }> => {
-        const program = importDataUseCase.execute({ currentState: stateRef.current, jsonData });
-        const exit = await Effect.runPromiseExit(Effect.provide(program, appLayer));
-        if (exit._tag === "Success") {
-          setState(exit.value);
+        try {
+          setState(importData({ currentState: stateRef.current, jsonData }));
           return { ok: true, value: undefined };
-        } else {
-          const errorMsg = exit.cause._tag === "Fail" ? exit.cause.error.message : "Import failed";
-          return { ok: false, error: new Error(errorMsg) };
+        } catch (error) {
+          return { ok: false, error: error instanceof Error ? error : new Error(String(error)) };
         }
       },
       toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
@@ -280,12 +249,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }),
     [
       refreshState,
-      toggleCoverageUseCase,
-      manageSessionUseCase,
-      manageClassUseCase,
-      exportDataUseCase,
-      importDataUseCase,
-      appLayer,
     ],
   );
 

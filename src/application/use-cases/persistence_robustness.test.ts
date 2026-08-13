@@ -1,80 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { Effect, Layer } from "effect";
-import { LoadStateUseCase } from "./load-state";
-import { SaveStateUseCase } from "./save-state";
+import { loadState } from "./load-state";
+import { saveState } from "./save-state";
 import { buildDefaultState } from "../../domain/logic/normalization";
-import {
-  StorageService,
-  StorageError,
-  NotFoundError,
-} from "../../infrastructure/storage/storage-service";
-import { createLogger, LoggerService } from "../../infrastructure/logger";
-
-const logger = createLogger("Test");
-const LoggerLive = Layer.succeed(LoggerService, logger);
+import { StorageError, NotFoundError, type StorageService } from "../../infrastructure/storage/storage-service";
 
 describe("Persistence Robustness", () => {
-  describe("LoadStateUseCase Edge Cases", () => {
-    it("returns default state when storage returns NotFoundError", async () => {
-      const mockStorage = StorageService.of({
-        loadState: (key) => Effect.fail(new NotFoundError({ key, message: "test" })),
-        saveState: () => Effect.void,
-      });
-      const StorageLive = Layer.succeed(StorageService, mockStorage);
-
-      const useCase = new LoadStateUseCase();
-      const program = useCase
-        .execute({ storageKey: "key" })
-        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
-
-      const exit = await Effect.runPromiseExit(program);
-      expect(exit._tag).toBe("Failure");
-      if (exit._tag === "Failure") {
-        expect(exit.cause._tag).toBe("Fail");
-        if (exit.cause._tag === "Fail") {
-          expect(exit.cause.error).toBeInstanceOf(NotFoundError);
-        }
-      }
+  describe("loadState edge cases", () => {
+    it("propagates NotFoundError for the presentation fallback", async () => {
+      const storage: StorageService = {
+        loadState: async (key) => { throw new NotFoundError({ key, message: "test" }); },
+        saveState: async () => undefined,
+      };
+      await expect(loadState(storage, { storageKey: "key" })).rejects.toBeInstanceOf(NotFoundError);
     });
 
     it("reports fatal errors instead of defaulting (Security/Network Fix)", async () => {
-      const mockStorage = StorageService.of({
-        loadState: () => Effect.fail(new StorageError({ message: "Network Error" })),
-        saveState: () => Effect.void,
-      });
-      const StorageLive = Layer.succeed(StorageService, mockStorage);
-
-      const useCase = new LoadStateUseCase();
-      const program = useCase
-        .execute({ storageKey: "key" })
-        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
-
-      const exit = await Effect.runPromiseExit(program);
-      expect(exit._tag).toBe("Failure");
-      if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
-        expect(exit.cause.error.message).toBe("Network Error");
-      }
+      const storage: StorageService = {
+        loadState: async () => { throw new StorageError({ message: "Network Error" }); },
+        saveState: async () => undefined,
+      };
+      await expect(loadState(storage, { storageKey: "key" })).rejects.toThrow("Network Error");
     });
   });
 
-  describe("SaveStateUseCase Edge Cases", () => {
+  describe("saveState edge cases", () => {
     it("handles save failures gracefully", async () => {
-      const mockStorage = StorageService.of({
-        loadState: () => Effect.fail(new NotFoundError({ key: "key", message: "" })),
-        saveState: () => Effect.fail(new StorageError({ message: "Quota Exceeded" })),
-      });
-      const StorageLive = Layer.succeed(StorageService, mockStorage);
-
-      const useCase = new SaveStateUseCase();
-      const program = useCase
-        .execute({ storageKey: "key", state: buildDefaultState() })
-        .pipe(Effect.provide(StorageLive), Effect.provide(LoggerLive));
-
-      const exit = await Effect.runPromiseExit(program);
-      expect(exit._tag).toBe("Failure");
-      if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
-        expect(exit.cause.error.message).toBe("Quota Exceeded");
-      }
+      const storage: StorageService = {
+        loadState: async () => { throw new NotFoundError({ key: "key", message: "" }); },
+        saveState: async () => { throw new StorageError({ message: "Quota Exceeded" }); },
+      };
+      await expect(saveState(storage, { storageKey: "key", state: buildDefaultState() })).rejects.toThrow("Quota Exceeded");
     });
   });
 });

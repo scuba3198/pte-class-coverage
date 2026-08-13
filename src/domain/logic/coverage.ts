@@ -159,5 +159,3 @@ export const getModuleIdByQuestionTypeId = (questionTypeId: QuestionTypeId): Mod
 
 export const getQuestionTypeById = (questionTypeId: QuestionTypeId) =>
   modules.flatMap((module) => module.questionTypes).find((item) => item.id === questionTypeId);
-
-export const getAllQuestionTypes = () => modules.flatMap((module) => module.questionTypes);

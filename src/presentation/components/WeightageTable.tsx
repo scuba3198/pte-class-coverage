@@ -1,29 +1,25 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { weightageChart } from "../../domain/data/weightage";
 import type { WeightageTotals } from "../../domain/types";
+
+const weightageTotals: WeightageTotals = weightageChart.reduce(
+  (acc, entry) => {
+    acc.listening += entry.scores.listening || 0;
+    acc.speaking += entry.scores.speaking || 0;
+    acc.reading += entry.scores.reading || 0;
+    acc.writing += entry.scores.writing || 0;
+    acc.total += entry.total || 0;
+    return acc;
+  },
+  { listening: 0, speaking: 0, reading: 0, writing: 0, total: 0 },
+);
+
+const sortedWeightageChart = [...weightageChart].sort((a, b) => b.total - a.total);
 
 /**
  * Component displaying the detailed PTE score weightage table.
  */
 export const WeightageTable: React.FC = () => {
-  const weightageTotals = useMemo((): WeightageTotals => {
-    return weightageChart.reduce(
-      (acc, entry) => {
-        acc.listening += entry.scores.listening || 0;
-        acc.speaking += entry.scores.speaking || 0;
-        acc.reading += entry.scores.reading || 0;
-        acc.writing += entry.scores.writing || 0;
-        acc.total += entry.total || 0;
-        return acc;
-      },
-      { listening: 0, speaking: 0, reading: 0, writing: 0, total: 0 },
-    );
-  }, []);
-
-  const sortedWeightageChart = useMemo(() => {
-    return [...weightageChart].sort((a, b) => b.total - a.total);
-  }, []);
-
   return (
     <div className="card weightage-card">
       <div className="card-header">

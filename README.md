@@ -19,11 +19,10 @@ Built using a strict clean architecture and functional programming principles wi
 
 This codebase enforces strict software safety systems using **Effect-TS**:
 
-- **Type-Safe Functional Effects**: Use of `Effect` tracks both success and failure states in the TypeScript compiler channel, preventing unhandled exceptions.
+- **Runtime Boundary Validation**: Effect Schema validates imported, local, and cloud state before it enters the app.
 - **Nominal & Branded Types**: Strongly differentiates distinct database IDs (e.g. `ClassId`, `ModuleId`, `SessionId`) using `@effect/schema` branding to prevent accidental cross-assignment.
 - **Strict Boundary Validation**: Evaluates external data at boundaries (network requests, localStorage) using schemas that automatically repair, sanitize, or reject corrupted states.
 - **Algebraic Data Errors**: Custom errors inherit from `Data.TaggedError`, facilitating compile-time checks and pattern matching on failure cases.
-- **Pure State Machine Transitions**: Managed via a clean, state-driven workflow FSM (`SessionCreationFSM`) that checks transition invariants.
 - **State Immutability**: All actions and state transitions inside use cases use pure functional spreads instead of mutating state in-place, eliminating side effects.
 - **Property-Based Testing (`fast-check`)**: Core business rules and transition boundaries are validated against thousands of randomized inputs to guarantee correctness.
 
@@ -68,7 +67,7 @@ graph TD
 ## Tech Stack
 
 - **Framework**: React 19 + Vite
-- **Effect Library**: Effect-TS (Core, Schema, Cause)
+- **Effect Library**: Effect-TS Schema/Either utilities
 - **Backend & Auth**: Supabase
 - **Styling**: Vanilla CSS (Premium Aesthetics, Dark Mode support)
 - **Testing**: Vitest + React Testing Library + fast-check (100% tests passing)

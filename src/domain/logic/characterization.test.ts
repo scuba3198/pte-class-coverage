@@ -3,7 +3,6 @@ import { Either } from "effect";
 import { mergeStates, normalizeQuestionName } from "./session";
 import { weightageEntries } from "./coverage";
 import type { AppState, ClassId, QuestionTypeId, SessionId } from "../types";
-import { SessionCreationFSM, ValidationError } from "./workflow-fsm";
 
 describe("Characterization Tests (Current Behavior)", () => {
   describe("normalizeQuestionName", () => {
@@ -119,41 +118,4 @@ describe("Characterization Tests (Current Behavior)", () => {
     });
   });
 
-  describe("SessionCreationFSM", () => {
-    it("allows valid module selection", () => {
-      const fsm = new SessionCreationFSM();
-      const result = fsm.transition({ type: "SELECT_MODULE", moduleId: "speaking" as any });
-      expect(Either.isRight(result)).toBe(true);
-      expect(fsm.state.type).toBe("ModuleSelected");
-    });
-
-    it("rejects cross-module question selection", () => {
-      const fsm = new SessionCreationFSM();
-      fsm.transition({ type: "SELECT_MODULE", moduleId: "speaking" as any });
-
-      const result = fsm.transition({
-        type: "SELECT_QUESTIONS",
-        questionTypeIds: ["summarize-written-text" as any],
-      });
-
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(ValidationError);
-        expect(result.left.message).toContain("does not belong to module");
-      }
-    });
-
-    it("allows valid question selection", () => {
-      const fsm = new SessionCreationFSM();
-      fsm.transition({ type: "SELECT_MODULE", moduleId: "speaking" as any });
-
-      const result = fsm.transition({
-        type: "SELECT_QUESTIONS",
-        questionTypeIds: ["read-aloud" as any],
-      });
-
-      expect(Either.isRight(result)).toBe(true);
-      expect(fsm.state.type).toBe("QuestionsSelected");
-    });
-  });
 });

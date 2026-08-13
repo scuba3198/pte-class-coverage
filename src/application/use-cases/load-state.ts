@@ -1,28 +1,12 @@
-import { Effect } from "effect";
 import { normalizeState } from "../../domain/logic/normalization";
-import { StorageService } from "../../infrastructure/storage/storage-service";
-import { LoggerService } from "../../infrastructure/logger";
+import type { StorageService } from "../../infrastructure/storage/storage-service";
+import type { AppState } from "../../domain/types";
 
 export interface LoadStateRequest {
   storageKey: string;
 }
 
-/**
- * Use case for loading the application state from storage.
- * Handles fallbacks and normalization with explicit error reporting via Effect.
- */
-export class LoadStateUseCase {
-  execute(request: LoadStateRequest) {
-    return Effect.gen(function* () {
-      const storage = yield* StorageService;
-      const logger = yield* LoggerService;
-      logger.info("Executing LoadStateUseCase", {
-        storageKey: request.storageKey,
-      });
-
-      const state = yield* storage.loadState(request.storageKey);
-      logger.info("State loaded successfully, normalizing");
-      return normalizeState(state);
-    });
-  }
-}
+export const loadState = async (
+  storage: StorageService,
+  request: LoadStateRequest,
+): Promise<AppState> => normalizeState(await storage.loadState(request.storageKey));
