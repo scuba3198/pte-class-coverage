@@ -1,30 +1,30 @@
 # PTE Class Coverage Tracker
 
-A modern, type-safe React application for tracking PTE exam preparation class coverage and sessions. 
+A type-safe React application for tracking PTE exam preparation class coverage and sessions.
 
-Built using a strict clean architecture and functional programming principles with **Effect-TS** to guarantee correctness, robust error handling, and runtime safety by design.
+Built with layered architecture and Effect Schema validation for safer data handling at application boundaries.
 
 ---
 
 ## Key Features
 
-- **☁️ Cloud Sync (Supabase)**: Supports real-time persistence with automatic sync. Includes identity-based loading that aborts initialization on fatal network failures to protect user data.
+- **☁️ Cloud Persistence (Supabase)**: Loads a user's saved state after sign-in and automatically saves subsequent changes. Initialization stops after fatal load failures to avoid overwriting cloud data.
 - **👤 Guest Mode**: Offline-first design utilizing `localStorage` if not logged in.
 - **📊 Smart Priority & Weightage**: Orders question types dynamically by mark contribution (High to Low) to focus study plans.
 - **🔒 Overwrite on Login**: Overwrites local work with cloud-saved profiles upon sign-in for clean state transitions.
 
 ---
 
-## Architectural Principles (Bug-Free by Design)
+## Architectural Principles
 
 This codebase enforces strict software safety systems using **Effect-TS**:
 
 - **Runtime Boundary Validation**: Effect Schema validates imported, local, and cloud state before it enters the app.
 - **Nominal & Branded Types**: Strongly differentiates distinct database IDs (e.g. `ClassId`, `ModuleId`, `SessionId`) using `@effect/schema` branding to prevent accidental cross-assignment.
-- **Strict Boundary Validation**: Evaluates external data at boundaries (network requests, localStorage) using schemas that automatically repair, sanitize, or reject corrupted states.
+- **Strict Boundary Validation**: Evaluates external data at boundaries (network requests, imports, and localStorage) using schemas that reject invalid state before it enters the application.
 - **Algebraic Data Errors**: Custom errors inherit from `Data.TaggedError`, facilitating compile-time checks and pattern matching on failure cases.
-- **State Immutability**: All actions and state transitions inside use cases use pure functional spreads instead of mutating state in-place, eliminating side effects.
-- **Property-Based Testing (`fast-check`)**: Core business rules and transition boundaries are validated against thousands of randomized inputs to guarantee correctness.
+- **State Immutability**: Application use cases return updated state instead of mutating the existing state in place.
+- **Property-Based Testing (`fast-check`)**: Selected normalization and state-merging properties are checked against randomized inputs.
 
 ---
 
@@ -70,7 +70,7 @@ graph TD
 - **Effect Library**: Effect-TS Schema/Either utilities
 - **Backend & Auth**: Supabase
 - **Styling**: Vanilla CSS (Premium Aesthetics, Dark Mode support)
-- **Testing**: Vitest + React Testing Library + fast-check (100% tests passing)
+- **Testing**: Vitest + React Testing Library + fast-check
 
 ---
 
@@ -82,6 +82,10 @@ Create a `.env` file in the root directory:
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+Cloud persistence also expects a `pte_tracker_state` table with `user_id`, `data`, and
+`updated_at` columns. Configure Row Level Security so authenticated users can read and
+upsert only the row matching their user ID. Guest mode works without Supabase configuration.
 
 ### GitHub Actions Deployment
 For production builds (e.g. GitHub Pages), configure the secrets in your repository settings:
