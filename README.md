@@ -83,9 +83,9 @@ VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-Cloud persistence also expects a `pte_tracker_state` table with `user_id`, `data`, and
-`updated_at` columns. Configure Row Level Security so authenticated users can read and
-upsert only the row matching their user ID. Guest mode works without Supabase configuration.
+For a fresh database, follow [Database setup](supabase/README.md). The migration creates
+`pte_tracker_state` with explicit grants and RLS so authenticated users can read and
+upsert only their own state. Guest mode works without Supabase configuration.
 
 ### GitHub Actions Deployment
 For production builds (e.g. GitHub Pages), configure the secrets in your repository settings:
