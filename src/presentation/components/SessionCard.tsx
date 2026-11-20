@@ -1,17 +1,17 @@
 import React from "react";
-import type { Module, ResolvedWeightageEntry } from "../../domain/types";
+import type { Module, ModuleId, QuestionTypeId, ResolvedWeightageEntry } from "../../domain/types";
 
 interface SessionCardProps {
   activeModule: Module;
   modules: readonly Module[];
   sessionDate: string;
   applyToCoverage: boolean;
-  sessionSelection: string[];
+  sessionSelection: readonly string[];
   coverageEntries: ResolvedWeightageEntry[];
-  onSelectModule: (id: string) => void;
+  onSelectModule: (id: ModuleId) => void;
   onSetDate: (date: string) => void;
   onSetApplyToCoverage: (apply: boolean) => void;
-  onToggleItem: (id: string) => void;
+  onToggleItem: (id: QuestionTypeId) => void;
 }
 
 /**
@@ -84,7 +84,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               key={`${entry.questionTypeId}-${activeModule.id}-session`}
               className={isSelected ? "question-card selected" : "question-card"}
               type="button"
-              onClick={() => onToggleItem(entry.questionTypeId || "")}
+              onClick={() => entry.questionTypeId && onToggleItem(entry.questionTypeId)}
             >
               <span className="question-name">{`${entry.question}${originSuffix}`}</span>
               <span className="question-status">{isSelected ? "Included" : "Tap to add"}</span>

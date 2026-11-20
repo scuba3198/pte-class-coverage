@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 interface BackupCardProps {
   onExport: () => void;
-  onImport: (jsonData: string) => Promise<{ ok: boolean; error?: string }>;
+  onImport: (jsonData: string) => Promise<{ ok: true } | { ok: false; error: Error | string }>;
 }
 
 /**
@@ -21,7 +21,8 @@ export const BackupCard: React.FC<BackupCardProps> = ({ onExport, onImport }) =>
       if (result.ok) {
         setImportError("");
       } else {
-        setImportError(result.error || "Import failed");
+        const message = result.error instanceof Error ? result.error.message : result.error;
+        setImportError(message || "Import failed");
       }
     } catch {
       setImportError("Invalid backup file format.");

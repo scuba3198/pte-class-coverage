@@ -72,7 +72,10 @@ export const supabaseStorageService: StorageService = {
       (acc, coverage) => acc + Object.values(coverage).filter(Boolean).length,
       0,
     );
-    const sessionCount = Object.values(state.sessions).reduce((acc, sessions) => acc + sessions.length, 0);
+    const sessionCount = Object.values(state.sessions).reduce(
+      (acc, sessions) => acc + sessions.length,
+      0,
+    );
     logger.info("Saving state to Supabase", { ticks: tickCount, sessions: sessionCount });
 
     let user: { id: string } | null;

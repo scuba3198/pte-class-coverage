@@ -1,10 +1,10 @@
 import React from "react";
-import type { ClassItem } from "../../domain/types";
+import type { ClassId, ClassItem } from "../../domain/types";
 
 interface ClassBarProps {
-  classes: ClassItem[];
-  activeClassId: string;
-  onSelectClass: (id: string) => void;
+  classes: readonly ClassItem[];
+  activeClassId: ClassId;
+  onSelectClass: (id: ClassId) => void;
   onResetClass: () => void;
 }
 

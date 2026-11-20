@@ -69,9 +69,10 @@ export const manageClass = (request: ManageClassRequest): AppState => {
 
   if (request.action.type === "RESET_CLASS") {
     const coverage = { ...nextState.coverage };
-    if (coverage[request.action.classId]) {
+    const existingCoverage = coverage[request.action.classId];
+    if (existingCoverage) {
       coverage[request.action.classId] = Object.fromEntries(
-        Object.keys(coverage[request.action.classId]).map((id) => [id, false]),
+        Object.keys(existingCoverage).map((id) => [id, false]),
       );
     }
 
