@@ -76,6 +76,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const activeRefreshIdRef = useRef<string | null>(null);
   const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const latestSaveIdRef = useRef(0);
+  const storageEpochRef = useRef(0);
+
+  // Any change of backing storage (login/logout) invalidates queued saves, so a
+  // snapshot taken for one account can never be written under another.
+  useEffect(() => {
+    storageEpochRef.current += 1;
+  }, [user]);
 
   // Supabase Auth Listener
   useEffect(() => {
@@ -207,8 +215,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Chain saves so snapshots always reach storage in order; concurrent upserts
     // could otherwise let an older snapshot overwrite a newer one.
+    // Queued saves are skipped if a newer snapshot was queued (it supersedes this one)
+    // or if the storage/user changed in the meantime.
+    const saveId = ++latestSaveIdRef.current;
+    const epoch = storageEpochRef.current;
     saveChainRef.current = saveChainRef.current
-      .then(() => saveState(storage, { storageKey: STORAGE_KEY, state }))
+      .then(() => {
+        if (saveId !== latestSaveIdRef.current || epoch !== storageEpochRef.current) return;
+        return saveState(storage, { storageKey: STORAGE_KEY, state });
+      })
       .catch((error) => logger.error("State save failed", { error }));
   }, [state, initializedStorage, user, isLoading, storage, logger]);
 
