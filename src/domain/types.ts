@@ -41,7 +41,14 @@ export type SkillKey = Schema.Schema.Type<typeof SkillKeySchema>;
 /**
  * Schema for scores keyed by communicative skill.
  */
-export const SkillScoresSchema = Schema.Record({ key: SkillKeySchema, value: Schema.Number });
+export const SkillScoresSchema = Schema.partial(
+  Schema.Struct({
+    speaking: Schema.Number,
+    writing: Schema.Number,
+    reading: Schema.Number,
+    listening: Schema.Number,
+  }),
+);
 export type SkillScores = Schema.Schema.Type<typeof SkillScoresSchema>;
 
 /**
@@ -111,29 +118,30 @@ export type Session = Schema.Schema.Type<typeof SessionSchema>;
 /**
  * Schema for per-class coverage mapping.
  */
-export const CoverageMapSchema = Schema.Record({
-  key: ClassIdSchema,
-  value: Schema.Record({
-    key: QuestionTypeIdSchema,
-    value: Schema.Boolean,
+export const CoverageMapSchema = Schema.mutable(
+  Schema.Record({
+    key: Schema.String,
+    value: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
   }),
-});
+);
 export type CoverageMap = Schema.Schema.Type<typeof CoverageMapSchema>;
 
 /**
  * Schema for per-class session history.
  */
-export const SessionMapSchema = Schema.Record({
-  key: ClassIdSchema,
-  value: Schema.Array(SessionSchema),
-});
+export const SessionMapSchema = Schema.mutable(
+  Schema.Record({
+    key: Schema.String,
+    value: Schema.Array(SessionSchema),
+  }),
+);
 export type SessionMap = Schema.Schema.Type<typeof SessionMapSchema>;
 
 /**
  * The full application state schema.
  */
 export const AppStateSchema = Schema.Struct({
-  classes: Schema.Array(ClassItemSchema),
+  classes: Schema.mutable(Schema.Array(ClassItemSchema)),
   coverage: CoverageMapSchema,
   sessions: SessionMapSchema,
 });

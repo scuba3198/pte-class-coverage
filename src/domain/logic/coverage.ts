@@ -54,7 +54,7 @@ const moduleNameToId: Record<string, ModuleId> = {
 export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
   .map((entry) => ({
     ...entry,
-    questionTypeId: undefined,
+    questionTypeId: undefined as QuestionTypeId | undefined,
   }))
   .map((entry) => {
     const moduleId = moduleNameToId[entry.module] || createModuleId("speaking");
@@ -74,9 +74,7 @@ export const weightageEntries: ResolvedWeightageEntry[] = weightageChart
       ? questionTypeIdToModuleId.get(entry.questionTypeId)
       : undefined,
   }))
-  .filter(
-    (entry): entry is ResolvedWeightageEntry => !!entry.questionTypeId && !!entry.originModuleId,
-  );
+  .filter((entry) => !!entry.questionTypeId && !!entry.originModuleId);
 
 /** All valid question type IDs. */
 export const allQuestionTypeIds = modules.flatMap((module) =>
@@ -152,7 +150,7 @@ export const getCoverageQuestionTypeIdsForSkill = (
  * Lookups for modules and question types.
  */
 export const getModuleById = (moduleId: ModuleId): Module =>
-  modules.find((module) => module.id === moduleId) || modules[0];
+  modules.find((module) => module.id === moduleId) ?? (modules[0] as Module);
 
 export const getModuleIdByQuestionTypeId = (questionTypeId: QuestionTypeId): ModuleId | undefined =>
   questionTypeIdToModuleId.get(questionTypeId);

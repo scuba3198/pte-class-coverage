@@ -10,6 +10,7 @@ import type {
   SessionId,
 } from "../types";
 import { allQuestionTypeIds } from "./coverage";
+import { toLocalDateString } from "./date";
 import { createSessionId } from "./session";
 
 /**
@@ -20,10 +21,11 @@ export const buildDefaultState = (): AppState => {
   const sessions: AppState["sessions"] = {};
 
   classDefaults.forEach((classItem) => {
-    coverage[classItem.id] = {};
+    const classCoverage: Record<string, boolean> = {};
     allQuestionTypeIds.forEach((questionTypeId) => {
-      coverage[classItem.id][questionTypeId] = false;
+      classCoverage[questionTypeId] = false;
     });
+    coverage[classItem.id] = classCoverage;
     sessions[classItem.id] = [];
   });
 
@@ -54,8 +56,9 @@ export const normalizeClasses = (classes: unknown): ClassItem[] => {
       return;
     }
     const safeItem = classItem as Record<string, unknown>;
-    const id = (safeItem.id || "") as ClassId;
-    const name = String(safeItem.name || defaultNameById.get(id) || "");
+    const rawId = safeItem["id"];
+    const id = (typeof rawId === "string" ? rawId : "") as ClassId;
+    const name = String(safeItem["name"] || defaultNameById.get(id) || "");
 
     if (!id || !name || seen.has(id)) {
       return;
@@ -98,30 +101,25 @@ export const normalizeState = (state: unknown): AppState => {
   const sessions: AppState["sessions"] = {};
 
   normalizedClasses.forEach((classItem) => {
-    coverage[classItem.id] = {};
+    const classCoverage: Record<string, boolean> = {};
     const sourceCoverage = safeState.coverage?.[classItem.id];
 
     allQuestionTypeIds.forEach((questionTypeId) => {
-      const existingValue =
-        sourceCoverage && typeof sourceCoverage[questionTypeId] === "boolean"
-          ? sourceCoverage[questionTypeId]
-          : false;
-      coverage[classItem.id][questionTypeId] = existingValue;
+      classCoverage[questionTypeId] = sourceCoverage?.[questionTypeId] === true;
     });
+    coverage[classItem.id] = classCoverage;
 
-    const existingSessions =
-      safeState.sessions && Array.isArray(safeState.sessions[classItem.id])
-        ? safeState.sessions[classItem.id]
-        : [];
+    const rawSessions: unknown = safeState.sessions?.[classItem.id];
+    const existingSessions: unknown[] = Array.isArray(rawSessions) ? rawSessions : [];
 
     sessions[classItem.id] = existingSessions
-      .map((session: unknown) => {
+      .map((session: unknown): Session | null => {
         if (!session || typeof session !== "object") {
           return null;
         }
 
         const safeSession = session as Partial<Session>;
-        const rawQuestionTypeIds = Array.isArray(safeSession.questionTypeIds)
+        const rawQuestionTypeIds: unknown[] = Array.isArray(safeSession.questionTypeIds)
           ? safeSession.questionTypeIds
           : [];
 
@@ -132,7 +130,7 @@ export const normalizeState = (state: unknown): AppState => {
 
         return {
           id: (safeSession.id || createSessionId()) as SessionId,
-          date: safeSession.date || new Date().toISOString().slice(0, 10),
+          date: safeSession.date || toLocalDateString(),
           moduleId: normalizeSessionModuleId(safeSession.moduleId || "speaking", questionTypeIds),
           questionTypeIds,
           note: safeSession.note || "",

@@ -6,7 +6,15 @@ import {
   getCoverageQuestionTypeIdsForSkill,
   getModuleById,
 } from "../../domain/logic/coverage";
-import type { SkillKey } from "../../domain/types";
+import { toLocalDateString } from "../../domain/logic/date";
+import {
+  createClassId,
+  createModuleId,
+  type ClassId,
+  type ModuleId,
+  type QuestionTypeId,
+  type SkillKey,
+} from "../../domain/types";
 
 /**
  * Custom hook to consume the AppContext and provide UI-specific state and actions.
@@ -20,15 +28,16 @@ export const useApp = () => {
   const { state, actions, isLoading, user, isGuestMode, theme } = context;
 
   // UI-only state (doesn't need persistence in AppState)
-  const [activeClassId, setActiveClassId] = useState("");
-  const [activeModuleId, setActiveModuleId] = useState("speaking");
-  const [sessionDate, setSessionDate] = useState(new Date().toISOString().slice(0, 10));
+  const [activeClassId, setActiveClassId] = useState<ClassId>(createClassId(""));
+  const [activeModuleId, setActiveModuleId] = useState<ModuleId>(createModuleId("speaking"));
+  const [sessionDate, setSessionDate] = useState(toLocalDateString());
   const [applyToCoverage, setApplyToCoverage] = useState(true);
 
   // Set initial activeClassId once state is loaded
   useEffect(() => {
-    if (!activeClassId && state.classes.length > 0) {
-      setActiveClassId(state.classes[0].id);
+    const firstClass = state.classes[0];
+    if (!activeClassId && firstClass) {
+      setActiveClassId(firstClass.id);
     }
   }, [state.classes, activeClassId]);
 
@@ -36,7 +45,7 @@ export const useApp = () => {
   const activeClass = useMemo(() => {
     return (
       state.classes.find((c) => c.id === activeClassId) ||
-      state.classes[0] || { id: "", name: "No Class" }
+      state.classes[0] || { id: createClassId(""), name: "No Class" }
     );
   }, [state.classes, activeClassId]);
 
@@ -98,8 +107,8 @@ export const useApp = () => {
 
   const coverageMarksTotal = useMemo(() => {
     return coverageEntries.reduce((sum, entry) => {
-      const qid = entry.questionTypeId || "";
-      if (coverageForClass[qid]) {
+      const qid = entry.questionTypeId;
+      if (qid && coverageForClass[qid]) {
         return sum + (entry.scores[activeSkill] || 0);
       }
       return sum;
@@ -129,10 +138,8 @@ export const useApp = () => {
       setActiveModuleId,
       setSessionDate,
       setApplyToCoverage,
-      toggleCoverage: (questionTypeId: string) =>
-        activeClass &&
-        activeClass.id &&
-        actions.toggleCoverage(activeClass.id, questionTypeId as any),
+      toggleCoverage: (questionTypeId: QuestionTypeId) =>
+        activeClass && activeClass.id && actions.toggleCoverage(activeClass.id, questionTypeId),
       manageSession: actions.manageSession,
       manageClass: actions.manageClass,
       exportData: actions.exportData,

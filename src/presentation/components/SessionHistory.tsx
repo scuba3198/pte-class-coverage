@@ -1,11 +1,12 @@
 import React from "react";
-import type { Session } from "../../domain/types";
+import type { Session, SessionId } from "../../domain/types";
+import { parseLocalDate } from "../../domain/logic/date";
 import { getModuleById, getQuestionTypeById } from "../../domain/logic/coverage";
 
 interface SessionHistoryProps {
   activeClassName: string;
-  sessions: Session[];
-  onDeleteSession: (id: string) => void;
+  sessions: readonly Session[];
+  onDeleteSession: (id: SessionId) => void;
 }
 
 /**
@@ -18,7 +19,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
 }) => {
   const formatDate = (value: string): string => {
     if (!value) return "";
-    const date = new Date(value);
+    const date = parseLocalDate(value);
     if (Number.isNaN(date.valueOf())) return value;
     return date.toLocaleDateString(undefined, {
       year: "numeric",

@@ -12,7 +12,7 @@ import { localStorageService } from "../../infrastructure/storage/local-storage-
 import { supabaseStorageService } from "../../infrastructure/storage/supabase-storage-adapter";
 import { NotFoundError, type StorageService } from "../../infrastructure/storage/storage-service";
 import { supabase } from "../../infrastructure/supabase";
-import type { User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 
 const STORAGE_KEY = "pte-tracker-state-v1";
 
@@ -45,9 +45,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<User | null>(null);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const stored = window.localStorage.getItem("pte-tracker-theme");
-      if (stored === "light" || stored === "dark") return stored;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("pte-tracker-theme");
+        if (stored === "light" || stored === "dark") return stored;
+      } catch {
+        // localStorage unavailable (private mode / blocked); fall through to system preference.
+      }
       if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
         return "dark";
       return "light";
@@ -71,6 +75,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [state]);
 
   const activeRefreshIdRef = useRef<string | null>(null);
+  const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
 
   // Supabase Auth Listener
   useEffect(() => {
@@ -78,28 +83,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Initial session check
     if (supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (mounted && session?.user) {
-          setUser(session.user);
-          setIsGuestMode(false);
-        }
-      });
+      supabase.auth
+        .getSession()
+        .then(({ data: { session } }: { data: { session: Session | null } }) => {
+          if (mounted && session?.user) {
+            setUser(session.user);
+            setIsGuestMode(false);
+          }
+        })
+        .catch(() => undefined);
     }
 
     // Auth events
-    let subscription: any = null;
+    let subscription: { unsubscribe: () => void } | null = null;
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!mounted) return;
-        const newUser = session?.user ?? null;
-        setUser((prev) => {
-          if (prev?.id === newUser?.id && !!prev === !!newUser) return prev;
-          return newUser;
-        });
-        if (newUser) {
-          setIsGuestMode(false);
-        }
-      });
+      const { data } = supabase.auth.onAuthStateChange(
+        (_event: AuthChangeEvent, session: Session | null) => {
+          if (!mounted) return;
+          const newUser = session?.user ?? null;
+          setUser((prev) => {
+            if (prev?.id === newUser?.id && !!prev === !!newUser) return prev;
+            return newUser;
+          });
+          if (newUser) {
+            setIsGuestMode(false);
+          }
+        },
+      );
       subscription = data.subscription;
     }
 
@@ -111,7 +121,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("pte-tracker-theme", theme);
+    try {
+      localStorage.setItem("pte-tracker-theme", theme);
+    } catch {
+      // Ignore: theme just won't persist.
+    }
   }, [theme]);
 
   const generateCorrelationId = () => `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -191,19 +205,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    void saveState(storage, { storageKey: STORAGE_KEY, state }).catch((error) =>
-      logger.error("State save failed", { error }),
-    );
+    // Chain saves so snapshots always reach storage in order; concurrent upserts
+    // could otherwise let an older snapshot overwrite a newer one.
+    saveChainRef.current = saveChainRef.current
+      .then(() => saveState(storage, { storageKey: STORAGE_KEY, state }))
+      .catch((error) => logger.error("State save failed", { error }));
   }, [state, initializedStorage, user, isLoading, storage, logger]);
 
   const wrappedActions = useMemo(
     () => ({
       toggleCoverage: async (classId: ClassId, questionTypeId: QuestionTypeId) => {
-        setState(toggleCoverage({
-          state: stateRef.current,
-          classId,
-          questionTypeId,
-        }));
+        setState(
+          toggleCoverage({
+            state: stateRef.current,
+            classId,
+            questionTypeId,
+          }),
+        );
       },
       manageSession: async (action: SessionAction) => {
         setState(manageSession({ state: stateRef.current, action }));
@@ -247,9 +265,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       },
     }),
-    [
-      refreshState,
-    ],
+    [refreshState],
   );
 
   const value = useMemo(

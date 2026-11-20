@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"];
+const supabaseAnonKey = import.meta.env["VITE_SUPABASE_ANON_KEY"];
 
 // Fail gracefully instead of crashing the whole app.
 // This allows Guest Mode to function even if Supabase is misconfigured.

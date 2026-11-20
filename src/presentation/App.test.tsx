@@ -2,7 +2,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { AppProvider } from "./context/AppContext";
-import type { AppState } from "../domain/types";
+import { createClassId, type AppState } from "../domain/types";
 
 // Mock Supabase to prevent network calls and unexpected auth states
 vi.mock("../infrastructure/supabase", () => ({
@@ -23,7 +23,7 @@ describe("App", () => {
 
   it("requires guest mode or login to see content, then selects correct class", async () => {
     const storedState: AppState = {
-      classes: [{ id: "class-9-10", name: "9-10" }],
+      classes: [{ id: createClassId("class-9-10"), name: "9-10" }],
       coverage: { "class-9-10": {} },
       sessions: { "class-9-10": [] },
     };

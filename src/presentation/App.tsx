@@ -223,7 +223,9 @@ const App: React.FC = () => {
             />
 
             <BackupCard
-              onExport={() => handlers.exportData(`${activeClass.name}-pte-backup.json`)}
+              onExport={() =>
+                handlers.exportData(`${activeClass.name.replace(/[^\w.-]+/g, "_")}-pte-backup.json`)
+              }
               onImport={handlers.importData}
             />
 

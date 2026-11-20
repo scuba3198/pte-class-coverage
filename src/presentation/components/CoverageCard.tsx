@@ -1,18 +1,24 @@
 import React from "react";
-import type { Module, ResolvedWeightageEntry, SkillKey } from "../../domain/types";
+import type {
+  Module,
+  ModuleId,
+  QuestionTypeId,
+  ResolvedWeightageEntry,
+  SkillKey,
+} from "../../domain/types";
 
 interface CoverageCardProps {
   activeClassName: string;
   activeModule: Module;
   activeSkill: SkillKey;
   modules: readonly Module[];
-  coverageForClass: Record<string, boolean>;
+  coverageForClass: Readonly<Record<string, boolean>>;
   coverageEntries: ResolvedWeightageEntry[];
   coverageMarksTotal: number;
   coverageCounts: { covered: number; total: number };
   moduleCoverageCounts: { covered: number; total: number };
-  onSelectModule: (id: string) => void;
-  onToggleCoverage: (id: string) => void;
+  onSelectModule: (id: ModuleId) => void;
+  onToggleCoverage: (id: QuestionTypeId) => void;
 }
 
 /**
@@ -84,7 +90,7 @@ export const CoverageCard: React.FC<CoverageCardProps> = ({
               key={`${entry.questionTypeId}-${activeModule.id}`}
               className={isCovered ? "question-card covered" : "question-card"}
               type="button"
-              onClick={() => onToggleCoverage(entry.questionTypeId || "")}
+              onClick={() => entry.questionTypeId && onToggleCoverage(entry.questionTypeId)}
             >
               <span className="question-name">{`${entry.question}${originSuffix}`}</span>
               <span className="question-status">{isCovered ? "Covered" : "Not yet"}</span>

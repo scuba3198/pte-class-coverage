@@ -11,7 +11,7 @@ import {
 export class NormalizationError extends Data.TaggedError("NormalizationError")<{
   readonly value: string;
 }> {
-  get message() {
+  override get message() {
     return `Failed to normalize value: "${this.value}"`;
   }
 }
@@ -56,25 +56,23 @@ export const mergeStates = (
   const sessions: AppState["sessions"] = {};
 
   mergedClasses.forEach((classItem) => {
-    coverage[classItem.id] = {};
+    const classCoverage: Record<string, boolean> = {};
     allQuestionTypeIds.forEach((questionTypeId) => {
-      coverage[classItem.id][questionTypeId] =
-        localState.coverage[classItem.id]?.[questionTypeId] ??
-        remoteState.coverage[classItem.id]?.[questionTypeId] ??
-        false;
+      classCoverage[questionTypeId] =
+        Boolean(localState.coverage[classItem.id]?.[questionTypeId]) ||
+        Boolean(remoteState.coverage[classItem.id]?.[questionTypeId]);
     });
+    coverage[classItem.id] = classCoverage;
 
     const mergedSessionsMap = new Map<SessionId, Session>();
-    const remoteSessions = Array.isArray(remoteState.sessions[classItem.id])
-      ? remoteState.sessions[classItem.id]
-      : [];
+    const remoteRaw = remoteState.sessions[classItem.id];
+    const remoteSessions = Array.isArray(remoteRaw) ? remoteRaw : [];
     remoteSessions.forEach((session) => {
       mergedSessionsMap.set(session.id, session);
     });
 
-    const localSessions = Array.isArray(localState.sessions[classItem.id])
-      ? localState.sessions[classItem.id]
-      : [];
+    const localRaw = localState.sessions[classItem.id];
+    const localSessions = Array.isArray(localRaw) ? localRaw : [];
     localSessions.forEach((session) => {
       mergedSessionsMap.set(session.id, session);
     });

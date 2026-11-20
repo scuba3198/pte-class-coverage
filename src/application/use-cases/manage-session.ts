@@ -31,8 +31,11 @@ export const manageSession = (request: ManageSessionRequest): AppState => {
   if (request.action.type === "TOGGLE_ITEM") {
     const { classId, date, moduleId, questionTypeId, applyToCoverage } = request.action;
     const sessions = nextState.sessions[classId] || [];
-    const existingIndex = sessions.findIndex((session) => session.date === date && session.moduleId === moduleId);
-    const currentSelection = existingIndex === -1 ? [] : [...sessions[existingIndex].questionTypeIds];
+    const existingIndex = sessions.findIndex(
+      (session) => session.date === date && session.moduleId === moduleId,
+    );
+    const existing = existingIndex === -1 ? undefined : sessions[existingIndex];
+    const currentSelection = existing ? [...existing.questionTypeIds] : [];
     const nextSelection = currentSelection.includes(questionTypeId)
       ? currentSelection.filter((id) => id !== questionTypeId)
       : [...currentSelection, questionTypeId];
@@ -42,11 +45,11 @@ export const manageSession = (request: ManageSessionRequest): AppState => {
       updatedSessions = sessions.filter((_, index) => index !== existingIndex);
     } else {
       const sessionEntry: Session = {
-        id: existingIndex === -1 ? createSessionId() : sessions[existingIndex].id,
+        id: existing ? existing.id : createSessionId(),
         date,
         moduleId,
         questionTypeIds: nextSelection,
-        note: existingIndex === -1 ? "" : sessions[existingIndex].note,
+        note: existing ? existing.note : "",
       };
       updatedSessions =
         existingIndex === -1
@@ -67,12 +70,13 @@ export const manageSession = (request: ManageSessionRequest): AppState => {
     };
   }
 
-  const sessions = nextState.sessions[request.action.classId] || [];
+  const { classId, sessionId } = request.action;
+  const sessions = nextState.sessions[classId] || [];
   return {
     ...nextState,
     sessions: {
       ...nextState.sessions,
-      [request.action.classId]: sessions.filter((session) => session.id !== request.action.sessionId),
+      [classId]: sessions.filter((session) => session.id !== sessionId),
     },
   };
 };

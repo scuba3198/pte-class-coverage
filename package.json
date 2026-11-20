@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "lint": "oxlint . --deny-warnings",
     "format": "prettier . --write --plugin=@prettier/plugin-oxc",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -p tsconfig.app.json --noEmit",
     "test:architecture": "dependency-cruiser src --include-only \"^src\" --config .dependency-cruiser.json",
     "test": "vitest run",
     "check": "run-s format lint type-check test test:architecture"

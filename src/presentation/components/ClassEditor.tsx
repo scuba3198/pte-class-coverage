@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import type { ClassItem } from "../../domain/types";
+import type { ClassId, ClassItem } from "../../domain/types";
 
 interface ClassEditorProps {
-  classes: ClassItem[];
-  activeClassId: string;
+  classes: readonly ClassItem[];
+  activeClassId: ClassId;
   onAddClass: (name: string) => void;
-  onRemoveClass: (id: string) => void;
-  onSelectClass: (id: string) => void;
+  onRemoveClass: (id: ClassId) => void;
+  onSelectClass: (id: ClassId) => void;
 }
 
 /**

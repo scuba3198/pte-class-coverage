@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Either } from "effect";
 import { mergeStates, normalizeQuestionName } from "./session";
 import { weightageEntries } from "./coverage";
-import type { AppState, ClassId, QuestionTypeId, SessionId } from "../types";
+import type { AppState, ClassId, ModuleId, QuestionTypeId, SessionId } from "../types";
 
 describe("Characterization Tests (Current Behavior)", () => {
   describe("normalizeQuestionName", () => {
@@ -44,8 +44,8 @@ describe("Characterization Tests (Current Behavior)", () => {
             {
               id: "rem1" as SessionId,
               date: "2023-01-01",
-              moduleId: "speaking",
-              questionTypeIds: ["q1"],
+              moduleId: "speaking" as ModuleId,
+              questionTypeIds: ["q1" as QuestionTypeId],
               note: "",
             },
           ],
@@ -66,15 +66,15 @@ describe("Characterization Tests (Current Behavior)", () => {
       const session1 = {
         id: "s1" as SessionId,
         date: "2023-01-01",
-        moduleId: "speaking",
-        questionTypeIds: ["q1"],
+        moduleId: "speaking" as ModuleId,
+        questionTypeIds: ["q1" as QuestionTypeId],
         note: "",
       };
       const sessionRemote = {
         id: "s_rem" as SessionId,
         date: "2023-01-02",
-        moduleId: "speaking",
-        questionTypeIds: ["q2"],
+        moduleId: "speaking" as ModuleId,
+        questionTypeIds: ["q2" as QuestionTypeId],
         note: "",
       };
 
@@ -117,5 +117,4 @@ describe("Characterization Tests (Current Behavior)", () => {
       expect(mcqReading?.questionTypeId).toBe("reading-mcma");
     });
   });
-
 });
