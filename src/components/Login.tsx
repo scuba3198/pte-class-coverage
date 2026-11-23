@@ -63,7 +63,9 @@ export const Login = ({ onContinueAsGuest }: { onContinueAsGuest: () => void }) 
             </p>
           )}
           {!supabase && (
-            <p className="form-notice">Cloud Sync is currently unavailable. Please use Guest Mode.</p>
+            <p className="form-notice">
+              Cloud Sync is currently unavailable. Please use Guest Mode.
+            </p>
           )}
           <button type="submit" className="button primary block" disabled={loading || !supabase}>
             {loading ? "Signing in..." : "Sign In"}

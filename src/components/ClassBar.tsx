@@ -12,7 +12,14 @@ interface ClassBarProps {
 }
 
 /** Picks the active class, adds new ones inline, and resets or removes the active one. */
-export const ClassBar = ({ classes, activeId, onSelect, onAdd, onReset, onRemove }: ClassBarProps) => {
+export const ClassBar = ({
+  classes,
+  activeId,
+  onSelect,
+  onAdd,
+  onReset,
+  onRemove,
+}: ClassBarProps) => {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
 

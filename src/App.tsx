@@ -182,7 +182,7 @@ const App = () => {
           <div className="accordion">
             <BackupCard
               state={state}
-              filename={`${activeClass.name}-pte-backup.json`}
+              filename={`${activeClass.name.replace(/[^\w.-]+/g, "_")}-pte-backup.json`}
               onImport={(backup) => update((s) => mergeBackup(s, backup))}
             />
             <HelpCard />
