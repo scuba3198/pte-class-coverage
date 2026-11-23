@@ -11,18 +11,20 @@ const steps = [
 ];
 
 export const HelpCard = () => (
-  <details className="card disclosure help-card">
+  <details className="accordion-row">
     <summary>
-      <span className="disclosure-text">
-        <span className="disclosure-title">How to use this tracker</span>
-        <span className="caption">A quick guide for teachers and students</span>
+      <span className="accordion-text">
+        <span className="accordion-title">How to use this tracker</span>
+        <span className="accordion-desc">A quick guide for teachers and students</span>
       </span>
-      <Icon name="chevron" size={18} />
+      <Icon name="chevron" size={20} />
     </summary>
-    <ol className="help-list">
-      {steps.map((step) => (
-        <li key={step}>{step}</li>
-      ))}
-    </ol>
+    <div className="accordion-body">
+      <ol className="help-list">
+        {steps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+    </div>
   </details>
 );

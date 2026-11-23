@@ -45,13 +45,13 @@ export const CoverageCard = ({ className, moduleId, covered, onToggle }: Coverag
   const percent = Math.round((coveredCount / entries.length) * 100) || 0;
 
   return (
-    <section className="card coverage-card" data-module={moduleId} aria-labelledby="coverage-title">
+    <section className="coverage" data-module={moduleId} aria-labelledby="coverage-title">
       <header className="coverage-header">
         <ProgressRing percent={percent} />
         <div className="coverage-heading">
           <p className="eyebrow">Class {className}</p>
           <h2 id="coverage-title">{module.name} coverage</h2>
-          <p className="caption">Top question types that add up to 72+ marks</p>
+          <p className="section-desc">Top question types that add up to 72+ marks</p>
         </div>
         <dl className="coverage-stats">
           <div>
@@ -68,26 +68,27 @@ export const CoverageCard = ({ className, moduleId, covered, onToggle }: Coverag
           </div>
         </dl>
       </header>
-      <div className="question-grid">
+      <ul className="question-list">
         {entries.map((entry) => {
           const isCovered = Boolean(covered[entry.typeId]);
           return (
-            <button
-              key={entry.typeId}
-              className="question-card"
-              type="button"
-              aria-pressed={isCovered}
-              onClick={() => onToggle(entry.typeId)}
-            >
-              <span className="status-circle" aria-hidden="true">
-                <Icon name="check" size={14} />
-              </span>
-              <span className="question-name">{entryLabel(entry, moduleId)}</span>
-              <span className="marks-chip">{`${(entry.scores[moduleId] ?? 0).toFixed(2)} marks`}</span>
-            </button>
+            <li key={entry.typeId}>
+              <button
+                className="question-row"
+                type="button"
+                aria-pressed={isCovered}
+                onClick={() => onToggle(entry.typeId)}
+              >
+                <span className="status-circle" aria-hidden="true">
+                  <Icon name="check" size={14} />
+                </span>
+                <span className="question-name">{entryLabel(entry, moduleId)}</span>
+                <span className="question-marks">{`${(entry.scores[moduleId] ?? 0).toFixed(2)} marks`}</span>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 };

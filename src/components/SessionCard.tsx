@@ -22,10 +22,10 @@ export const SessionCard = ({
   onSetAlsoCover,
   onToggle,
 }: SessionCardProps) => (
-  <section className="card session-card" data-module={moduleId} aria-labelledby="session-title">
-    <header className="card-header">
+  <section className="sidebar-section" data-module={moduleId} aria-labelledby="session-title">
+    <header className="section-head">
       <h2 id="session-title">Log a session</h2>
-      <p className="caption">Tap what you taught. Changes save automatically.</p>
+      <p className="section-desc">Tap what you taught. Changes save automatically.</p>
     </header>
     <div className="session-controls">
       <label className="field">

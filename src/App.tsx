@@ -152,7 +152,7 @@ const App = () => {
             onToggle={(typeId) => update((s) => toggleCoverage(s, activeClass.id, typeId))}
           />
 
-          <div className="side-column">
+          <div className="sidebar">
             <SessionCard
               moduleId={moduleId}
               date={sessionDate}
@@ -174,21 +174,37 @@ const App = () => {
           </div>
         </div>
 
-        <div className="extras">
-          <BackupCard
-            state={state}
-            filename={`${activeClass.name}-pte-backup.json`}
-            onImport={(backup) => update((s) => mergeBackup(s, backup))}
-          />
-          <HelpCard />
-        </div>
-
-        <WeightageTable />
+        <section className="reference" aria-labelledby="reference-title">
+          <header className="section-head">
+            <h2 id="reference-title">Reference</h2>
+            <p className="section-desc">Backups, a quick guide and the full score chart</p>
+          </header>
+          <div className="accordion">
+            <BackupCard
+              state={state}
+              filename={`${activeClass.name}-pte-backup.json`}
+              onImport={(backup) => update((s) => mergeBackup(s, backup))}
+            />
+            <HelpCard />
+            <WeightageTable />
+          </div>
+        </section>
       </main>
 
-      <footer className="container app-footer">
-        <p>© {new Date().getFullYear()} PTE Academic score weightage tracker</p>
-        <p>by Mumukshu D.C</p>
+      <footer className="app-footer">
+        <div className="container footer-inner">
+          <div className="footer-brand">
+            <Logomark size={28} />
+            <div>
+              <p className="footer-name">PTE Class Coverage</p>
+              <p className="footer-tagline">Academic score tracker</p>
+            </div>
+          </div>
+          <p className="footer-credit">
+            Designed and built by <strong>Mumukshu D.C</strong>
+          </p>
+          <p className="footer-copy">© {new Date().getFullYear()} PTE Class Coverage</p>
+        </div>
       </footer>
 
       {confirmation && (

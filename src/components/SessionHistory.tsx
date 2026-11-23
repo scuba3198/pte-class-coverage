@@ -21,12 +21,12 @@ interface SessionHistoryProps {
 }
 
 export const SessionHistory = ({ className, sessions, onDelete }: SessionHistoryProps) => (
-  <section className="card history-card" aria-labelledby="history-title">
-    <header className="card-header">
+  <section className="sidebar-section" aria-labelledby="history-title">
+    <header className="section-head">
       <h2 id="history-title">
         Session history <span className="count-badge">{sessions.length}</span>
       </h2>
-      <p className="caption">Everything logged for class {className}</p>
+      <p className="section-desc">Everything logged for class {className}</p>
     </header>
     {sessions.length ? (
       <ul className="session-list">
@@ -70,10 +70,9 @@ export const SessionHistory = ({ className, sessions, onDelete }: SessionHistory
           })}
       </ul>
     ) : (
-      <div className="empty-state">
-        <p className="empty-title">No sessions yet</p>
-        <p className="caption">Logged sessions for this class will appear here.</p>
-      </div>
+      <p className="empty-state">
+        No sessions yet. Logged sessions for this class will appear here.
+      </p>
     )}
   </section>
 );

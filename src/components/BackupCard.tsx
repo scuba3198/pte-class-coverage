@@ -40,29 +40,39 @@ export const BackupCard = ({ state, filename, onImport }: BackupCardProps) => {
   };
 
   return (
-    <section className="card backup-card" aria-labelledby="backup-title">
-      <header className="card-header">
-        <h2 id="backup-title">Backup</h2>
-        <p className="caption">
+    <details className="accordion-row">
+      <summary>
+        <span className="accordion-text">
+          <span className="accordion-title">Backup</span>
+          <span className="accordion-desc">Export or import a copy of your data</span>
+        </span>
+        <Icon name="chevron" size={20} />
+      </summary>
+      <div className="accordion-body">
+        <p className="body-text">
           Data lives in this browser. Export a copy before clearing storage or switching devices.
         </p>
-      </header>
-      <div className="backup-actions">
-        <button className="button primary" type="button" onClick={() => downloadJson(state, filename)}>
-          <Icon name="download" size={16} />
-          Export data
-        </button>
-        <label className="button secondary file-button">
-          <Icon name="upload" size={16} />
-          Import backup
-          <input type="file" accept="application/json" onChange={handleImport} />
-        </label>
+        <div className="backup-actions">
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => downloadJson(state, filename)}
+          >
+            <Icon name="download" size={16} />
+            Export data
+          </button>
+          <label className="button secondary file-button">
+            <Icon name="upload" size={16} />
+            Import backup
+            <input type="file" accept="application/json" onChange={handleImport} />
+          </label>
+        </div>
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
-    </section>
+    </details>
   );
 };

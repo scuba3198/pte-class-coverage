@@ -19,7 +19,7 @@ const openAsGuest = async () => {
   render(<App />);
   await screen.findByText("PTE Tracker Login");
   fireEvent.click(screen.getByText("Continue as Guest"));
-  await screen.findByText("PTE Class Coverage");
+  await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
 };
 
 const saved = (): AppState => JSON.parse(localStorage.getItem(STORAGE_KEY)!);
@@ -40,7 +40,7 @@ describe("App", () => {
     render(<App />);
     await screen.findByText("PTE Tracker Login");
     fireEvent.click(screen.getByText("Continue as Guest"));
-    await screen.findByText("PTE Class Coverage");
+    await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
 
     const chip = screen.getByRole("button", { name: "9-10" });
     expect(chip.getAttribute("aria-pressed")).toBe("true");
