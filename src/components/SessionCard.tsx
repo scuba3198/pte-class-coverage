@@ -1,13 +1,12 @@
 import { entryLabel, getCoverageEntries } from "../coverage";
 import type { ModuleId } from "../types";
-import { ModuleTabs } from "./ModuleTabs";
+import { Icon } from "./Icon";
 
 interface SessionCardProps {
   moduleId: ModuleId;
   date: string;
   alsoCover: boolean;
   selected: string[];
-  onSelectModule: (id: ModuleId) => void;
   onSetDate: (date: string) => void;
   onSetAlsoCover: (alsoCover: boolean) => void;
   onToggle: (typeId: string) => void;
@@ -19,53 +18,52 @@ export const SessionCard = ({
   date,
   alsoCover,
   selected,
-  onSelectModule,
   onSetDate,
   onSetAlsoCover,
   onToggle,
 }: SessionCardProps) => (
-  <div className="card session-card">
-    <div className="card-header">
-      <div>
-        <p className="section-label">Session log</p>
-        <h2>Auto-saved session</h2>
-        <p className="card-subtitle">Add what you learned in class today.</p>
-      </div>
-    </div>
-    <ModuleTabs active={moduleId} onSelect={onSelectModule} />
+  <section className="card session-card" data-module={moduleId} aria-labelledby="session-title">
+    <header className="card-header">
+      <h2 id="session-title">Log a session</h2>
+      <p className="caption">Tap what you taught. Changes save automatically.</p>
+    </header>
     <div className="session-controls">
-      <label>
-        Date
+      <label className="field">
+        <span className="field-label">Date</span>
         <input
+          className="control"
           type="date"
           value={date}
           onChange={(e) => e.target.value && onSetDate(e.target.value)}
         />
       </label>
-      <label className="toggle">
+      <label className="switch">
         <input
           type="checkbox"
+          role="switch"
           checked={alsoCover}
           onChange={(e) => onSetAlsoCover(e.target.checked)}
         />
-        Also mark as covered
+        <span className="switch-track" aria-hidden="true" />
+        <span>Also mark as covered</span>
       </label>
     </div>
-    <div className="question-grid compact">
+    <div className="session-chips">
       {getCoverageEntries(moduleId).map((entry) => {
         const isSelected = selected.includes(entry.typeId);
         return (
           <button
             key={entry.typeId}
-            className={isSelected ? "question-card selected" : "question-card"}
+            className="chip session-chip"
             type="button"
+            aria-pressed={isSelected}
             onClick={() => onToggle(entry.typeId)}
           >
-            <span className="question-name">{entryLabel(entry, moduleId)}</span>
-            <span className="question-status">{isSelected ? "Included" : "Tap to add"}</span>
+            <Icon name={isSelected ? "check" : "plus"} size={14} />
+            {entryLabel(entry, moduleId)}
           </button>
         );
       })}
     </div>
-  </div>
+  </section>
 );

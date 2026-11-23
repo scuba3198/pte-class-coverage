@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { BackupCard } from "./components/BackupCard";
 import { ClassBar } from "./components/ClassBar";
-import { ClassEditor } from "./components/ClassEditor";
 import { ConfirmationModal } from "./components/ConfirmationModal";
 import { CoverageCard } from "./components/CoverageCard";
 import { HelpCard } from "./components/HelpCard";
+import { Icon, Logomark } from "./components/Icon";
 import { Login } from "./components/Login";
+import { ModuleTabs } from "./components/ModuleTabs";
 import { SessionCard } from "./components/SessionCard";
 import { SessionHistory } from "./components/SessionHistory";
 import { WeightageTable } from "./components/WeightageTable";
@@ -26,6 +27,7 @@ import "./styles/App.css";
 interface Confirmation {
   title: string;
   message: string;
+  confirmLabel: string;
   onConfirm: () => void;
 }
 
@@ -42,6 +44,7 @@ const App = () => {
   if (loading) {
     return (
       <div className="loading-screen">
+        <Logomark size={40} />
         <p>Loading PTE Tracker...</p>
       </div>
     );
@@ -53,116 +56,108 @@ const App = () => {
 
   // Falls back to the first class when none is picked yet or the picked one was removed.
   const activeClass = state.classes.find((c) => c.id === classId) ?? state.classes[0]!;
+  const covered = state.coverage[activeClass.id] ?? {};
   const sessions = state.sessions[activeClass.id] ?? [];
   const selected =
     sessions.find((s) => s.date === sessionDate && s.moduleId === moduleId)?.questionTypeIds ?? [];
 
-  const confirm = (title: string, message: string, onConfirm: () => void) =>
+  const confirm = (confirmation: Confirmation) =>
     setConfirmation({
-      title,
-      message,
+      ...confirmation,
       onConfirm: () => {
-        onConfirm();
+        confirmation.onConfirm();
         setConfirmation(null);
       },
     });
 
+  const nextTheme = theme === "light" ? "dark" : "light";
+
   return (
-    <div className="app-container">
+    <div className="app">
       <header className="app-header">
-        <div className="header-content">
+        <div className="container header-inner">
           <div className="brand">
-            <div className="brand-mark">
-              <img src={`${import.meta.env.BASE_URL}vite.svg`} alt="PTE" />
-            </div>
-            <div className="brand-text">
-              <h1>
-                PTE Class Coverage
-                <span className="brand-signature">by Mumukshu D.C</span>
-              </h1>
-              <p className="brand-overline">Academic Score Tracker</p>
+            <Logomark size={34} />
+            <div>
+              <h1 className="brand-name">PTE Class Coverage</h1>
+              <p className="brand-subtitle">Academic score tracker</p>
             </div>
           </div>
-        </div>
-
-        <div className="auth-panel">
-          {user ? (
-            <div className="auth-signed-in">
-              <div className="auth-info">
-                <p className="auth-label">Teacher</p>
-                <p className="auth-value">{user.email}</p>
-              </div>
-              <button className="logout-button" onClick={logout}>
-                Sign Out
-              </button>
+          <div className="header-actions">
+            <div className="account-pill">
+              {user ? (
+                <>
+                  <span className="account-name" title={user.email}>
+                    {user.email}
+                  </span>
+                  <button className="link-button" type="button" onClick={logout}>
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="account-name">Guest</span>
+                  <button className="link-button" type="button" onClick={() => setIsGuest(false)}>
+                    Sign in
+                  </button>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="auth-guest">
-              <div className="auth-info">
-                <p className="auth-label">Mode</p>
-                <p className="auth-value">Guest (Local Only)</p>
-              </div>
-              <button className="login-link-button" onClick={() => setIsGuest(false)}>
-                Sign In
-              </button>
-            </div>
-          )}
-          <div className="theme-toggle">
             <button
-              className="theme-toggle-button"
+              className="icon-button"
+              type="button"
               onClick={toggleTheme}
-              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              aria-label={`Switch to ${nextTheme} mode`}
+              title={`Switch to ${nextTheme} mode`}
             >
-              {theme === "light" ? "🌙" : "☀️"}
+              <Icon name={theme === "light" ? "moon" : "sun"} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="main-content">
+      <main className="container main">
         <ClassBar
           classes={state.classes}
           activeId={activeClass.id}
           onSelect={setClassId}
+          onAdd={(name) => update((s) => addClass(s, name))}
           onReset={() =>
-            confirm(
-              "Reset Class Data",
-              "Are you sure you want to reset all coverage and session data for this class? This cannot be undone.",
-              () => update((s) => resetClass(s, activeClass.id)),
-            )
+            confirm({
+              title: `Reset class ${activeClass.name}?`,
+              message:
+                "This clears all coverage and session data for this class. This cannot be undone.",
+              confirmLabel: "Reset class",
+              onConfirm: () => update((s) => resetClass(s, activeClass.id)),
+            })
+          }
+          onRemove={() =>
+            confirm({
+              title: `Remove class ${activeClass.name}?`,
+              message:
+                "All coverage and sessions for this class will be permanently deleted. This cannot be undone.",
+              confirmLabel: "Remove class",
+              onConfirm: () => update((s) => removeClass(s, activeClass.id)),
+            })
           }
         />
 
-        <div className="main-grid">
-          <div className="primary-column">
-            <ClassEditor
-              classes={state.classes}
-              activeId={activeClass.id}
-              onAdd={(name) => update((s) => addClass(s, name))}
-              onRemove={(id) =>
-                confirm(
-                  "Remove Class",
-                  "Are you sure you want to remove this class? All associated coverage and sessions will be permanently deleted.",
-                  () => update((s) => removeClass(s, id)),
-                )
-              }
-              onSelect={setClassId}
-            />
+        <ModuleTabs active={moduleId} covered={covered} onSelect={setModuleId} />
 
-            <CoverageCard
-              className={activeClass.name}
-              moduleId={moduleId}
-              covered={state.coverage[activeClass.id] ?? {}}
-              onSelectModule={setModuleId}
-              onToggle={(typeId) => update((s) => toggleCoverage(s, activeClass.id, typeId))}
-            />
+        <div className="workspace">
+          <CoverageCard
+            className={activeClass.name}
+            moduleId={moduleId}
+            covered={covered}
+            onToggle={(typeId) => update((s) => toggleCoverage(s, activeClass.id, typeId))}
+          />
 
+          <div className="side-column">
             <SessionCard
               moduleId={moduleId}
               date={sessionDate}
               alsoCover={alsoCover}
               selected={selected}
-              onSelectModule={setModuleId}
               onSetDate={setSessionDate}
               onSetAlsoCover={setAlsoCover}
               onToggle={(typeId) =>
@@ -171,36 +166,36 @@ const App = () => {
                 )
               }
             />
-          </div>
-
-          <div className="secondary-column">
             <SessionHistory
               className={activeClass.name}
               sessions={sessions}
               onDelete={(sessionId) => update((s) => deleteSession(s, activeClass.id, sessionId))}
             />
-
-            <BackupCard
-              state={state}
-              filename={`${activeClass.name.replace(/[^\w.-]+/g, "_")}-pte-backup.json`}
-              onImport={(backup) => update((s) => mergeBackup(s, backup))}
-            />
-
-            <HelpCard />
           </div>
+        </div>
+
+        <div className="extras">
+          <BackupCard
+            state={state}
+            filename={`${activeClass.name}-pte-backup.json`}
+            onImport={(backup) => update((s) => mergeBackup(s, backup))}
+          />
+          <HelpCard />
         </div>
 
         <WeightageTable />
       </main>
 
-      <footer className="app-footer">
-        <p>© {new Date().getFullYear()} PTE Academic Score Weightage Tracker</p>
+      <footer className="container app-footer">
+        <p>© {new Date().getFullYear()} PTE Academic score weightage tracker</p>
+        <p>by Mumukshu D.C</p>
       </footer>
 
       {confirmation && (
         <ConfirmationModal
           title={confirmation.title}
           message={confirmation.message}
+          confirmLabel={confirmation.confirmLabel}
           onConfirm={confirmation.onConfirm}
           onCancel={() => setConfirmation(null)}
         />

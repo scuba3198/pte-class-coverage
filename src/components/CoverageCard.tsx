@@ -1,23 +1,40 @@
 import { entryLabel, getCoverageEntries, getModule } from "../coverage";
 import type { ModuleId } from "../types";
-import { ModuleTabs } from "./ModuleTabs";
+import { Icon } from "./Icon";
+
+const RING_RADIUS = 30;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+const ProgressRing = ({ percent }: { percent: number }) => (
+  <div className="progress-ring">
+    <svg viewBox="0 0 72 72" aria-hidden="true">
+      <circle className="progress-ring-track" cx="36" cy="36" r={RING_RADIUS} />
+      <circle
+        className="progress-ring-value"
+        cx="36"
+        cy="36"
+        r={RING_RADIUS}
+        strokeDasharray={RING_LENGTH}
+        strokeDashoffset={RING_LENGTH * (1 - percent / 100)}
+        opacity={percent ? 1 : 0}
+      />
+    </svg>
+    <span className="progress-ring-label">
+      {percent}
+      <small>%</small>
+    </span>
+  </div>
+);
 
 interface CoverageCardProps {
   className: string;
   moduleId: ModuleId;
   covered: Record<string, boolean>;
-  onSelectModule: (id: ModuleId) => void;
   onToggle: (typeId: string) => void;
 }
 
-/** Overall and per-module coverage for one class; click a question type to toggle it. */
-export const CoverageCard = ({
-  className,
-  moduleId,
-  covered,
-  onSelectModule,
-  onToggle,
-}: CoverageCardProps) => {
+/** The module's top question types (72+ marks) for one class; click one to toggle it covered. */
+export const CoverageCard = ({ className, moduleId, covered, onToggle }: CoverageCardProps) => {
   const module = getModule(moduleId);
   const entries = getCoverageEntries(moduleId);
   const coveredCount = entries.filter((e) => covered[e.typeId]).length;
@@ -25,46 +42,52 @@ export const CoverageCard = ({
     (sum, e) => sum + (covered[e.typeId] ? (e.scores[moduleId] ?? 0) : 0),
     0,
   );
-  const moduleCovered = module.questionTypes.filter((q) => covered[q.id]).length;
+  const percent = Math.round((coveredCount / entries.length) * 100) || 0;
 
   return (
-    <div className="card coverage-card">
-      <div className="card-header">
-        <div>
-          <p className="section-label">Overall coverage</p>
-          <h2>{className}</h2>
-          <p className="card-subtitle">
-            {coveredCount} of {entries.length} question types covered (72+ marks)
-          </p>
-          <p className="card-subtitle">{`Coverage total: ${Math.round(marks)} / 90`}</p>
+    <section className="card coverage-card" data-module={moduleId} aria-labelledby="coverage-title">
+      <header className="coverage-header">
+        <ProgressRing percent={percent} />
+        <div className="coverage-heading">
+          <p className="eyebrow">Class {className}</p>
+          <h2 id="coverage-title">{module.name} coverage</h2>
+          <p className="caption">Top question types that add up to 72+ marks</p>
         </div>
-        <div className="progress-ring">
-          <span>{Math.round((coveredCount / entries.length) * 100) || 0}%</span>
-        </div>
-      </div>
-      <ModuleTabs active={moduleId} onSelect={onSelectModule} />
-      <div className="coverage-summary">
-        <p>
-          {module.name}: {moduleCovered} of {module.questionTypes.length} covered
-        </p>
-      </div>
+        <dl className="coverage-stats">
+          <div>
+            <dt>Question types</dt>
+            <dd>
+              <strong>{coveredCount}</strong> of {entries.length} covered
+            </dd>
+          </div>
+          <div>
+            <dt>Marks covered</dt>
+            <dd>
+              <strong>{Math.round(marks)}</strong> / 90
+            </dd>
+          </div>
+        </dl>
+      </header>
       <div className="question-grid">
         {entries.map((entry) => {
-          const isCovered = covered[entry.typeId];
+          const isCovered = Boolean(covered[entry.typeId]);
           return (
             <button
               key={entry.typeId}
-              className={isCovered ? "question-card covered" : "question-card"}
+              className="question-card"
               type="button"
+              aria-pressed={isCovered}
               onClick={() => onToggle(entry.typeId)}
             >
+              <span className="status-circle" aria-hidden="true">
+                <Icon name="check" size={14} />
+              </span>
               <span className="question-name">{entryLabel(entry, moduleId)}</span>
-              <span className="question-status">{isCovered ? "Covered" : "Not yet"}</span>
-              <span className="question-status">{`${(entry.scores[moduleId] ?? 0).toFixed(2)} marks`}</span>
+              <span className="marks-chip">{`${(entry.scores[moduleId] ?? 0).toFixed(2)} marks`}</span>
             </button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };

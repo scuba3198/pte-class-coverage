@@ -1,11 +1,17 @@
 import { getModule, getQuestionTypeName } from "../coverage";
 import type { Session } from "../types";
+import { Icon } from "./Icon";
 
 /** Parses YYYY-MM-DD as a local date; `new Date("2026-11-23")` would be UTC and can show the day before. */
 const formatDate = (value: string): string => {
   const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00` : value);
   if (Number.isNaN(date.valueOf())) return value;
-  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 interface SessionHistoryProps {
@@ -15,16 +21,15 @@ interface SessionHistoryProps {
 }
 
 export const SessionHistory = ({ className, sessions, onDelete }: SessionHistoryProps) => (
-  <div className="card log-card">
-    <div className="card-header">
-      <div>
-        <p className="section-label">Session history</p>
-        <h2>{className}</h2>
-        <p className="card-subtitle">{sessions.length} sessions recorded</p>
-      </div>
-    </div>
+  <section className="card history-card" aria-labelledby="history-title">
+    <header className="card-header">
+      <h2 id="history-title">
+        Session history <span className="count-badge">{sessions.length}</span>
+      </h2>
+      <p className="caption">Everything logged for class {className}</p>
+    </header>
     {sessions.length ? (
-      <div className="session-list">
+      <ul className="session-list">
         {[...sessions]
           .sort((a, b) => b.date.localeCompare(a.date))
           .map((session) => {
@@ -32,25 +37,43 @@ export const SessionHistory = ({ className, sessions, onDelete }: SessionHistory
               .flatMap((id) => getQuestionTypeName(id) ?? [])
               .sort((a, b) => a.localeCompare(b));
             return (
-              <div key={session.id} className="session-item">
-                <div>
-                  <p className="session-date">{formatDate(session.date)}</p>
-                  <p className="session-module">{getModule(session.moduleId).name}</p>
-                  <p className="session-questions">
-                    {names.length ? names.join(", ") : "No items recorded"}
+              <li key={session.id} className="session-item" data-module={session.moduleId}>
+                <span className="dot" aria-hidden="true" />
+                <div className="session-body">
+                  <p className="session-meta">
+                    <span className="session-date">{formatDate(session.date)}</span>
+                    <span className="session-module">{getModule(session.moduleId).name}</span>
                   </p>
+                  {names.length ? (
+                    <ul className="session-tags">
+                      {names.map((n) => (
+                        <li key={n} className="tag">
+                          {n}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="caption">No items recorded</p>
+                  )}
                 </div>
-                <button className="ghost-button" type="button" onClick={() => onDelete(session.id)}>
-                  Remove
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label="Remove session"
+                  title="Remove session"
+                  onClick={() => onDelete(session.id)}
+                >
+                  <Icon name="trash" size={16} />
                 </button>
-              </div>
+              </li>
             );
           })}
-      </div>
+      </ul>
     ) : (
       <div className="empty-state">
-        <p>No sessions yet. Add one on the left to start tracking.</p>
+        <p className="empty-title">No sessions yet</p>
+        <p className="caption">Logged sessions for this class will appear here.</p>
       </div>
     )}
-  </div>
+  </section>
 );
