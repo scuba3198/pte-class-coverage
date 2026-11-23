@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { AppState } from "./types";
@@ -19,7 +19,7 @@ const openAsGuest = async () => {
   render(<App />);
   await screen.findByText("PTE Tracker Login");
   fireEvent.click(screen.getByText("Continue as Guest"));
-  await screen.findByText("PTE Class Coverage");
+  await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
 };
 
 const saved = (): AppState => JSON.parse(localStorage.getItem(STORAGE_KEY)!);
@@ -40,10 +40,22 @@ describe("App", () => {
     render(<App />);
     await screen.findByText("PTE Tracker Login");
     fireEvent.click(screen.getByText("Continue as Guest"));
-    await screen.findByText("PTE Class Coverage");
+    await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
 
-    const chips = screen.getAllByRole("button", { name: "9-10" });
-    expect(chips.some((b) => b.className.includes("active"))).toBe(true);
+    const chip = screen.getByRole("button", { name: "9-10" });
+    expect(chip.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("adds a class from the class bar and makes it selectable", async () => {
+    await openAsGuest();
+    fireEvent.click(screen.getByRole("button", { name: "Add class" }));
+    const input = screen.getByRole("textbox", { name: "New class name" });
+    fireEvent.change(input, { target: { value: "11-12" } });
+    fireEvent.submit(input.closest("form")!);
+
+    await waitFor(() => expect(saved().classes.map((c) => c.name)).toContain("11-12"));
+    fireEvent.click(screen.getByRole("button", { name: "11-12" }));
+    expect(screen.getByRole("button", { name: "11-12" }).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("keeps every click when several happen before React re-renders", async () => {
@@ -56,13 +68,13 @@ describe("App", () => {
 
   it("logs a session, marks it covered, and removes it again", async () => {
     await openAsGuest();
-    const sessionCard = document.querySelector(".session-card") as HTMLElement;
-    fireEvent.click(sessionCard.querySelector(".question-card")!);
+    const sessionCard = screen.getByRole("region", { name: "Log a session" });
+    fireEvent.click(within(sessionCard).getAllByRole("button")[0]!);
 
     await waitFor(() => expect(saved().sessions["class-7-8"]).toHaveLength(1));
     expect(ticks("class-7-8")).toBe(1);
 
-    fireEvent.click(document.querySelector(".session-item button")!);
+    fireEvent.click(await screen.findByRole("button", { name: "Remove session" }));
     await waitFor(() => expect(saved().sessions["class-7-8"]).toHaveLength(0));
   });
 

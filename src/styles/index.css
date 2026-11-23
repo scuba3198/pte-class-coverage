@@ -1,169 +1,210 @@
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+/* ---------- Tokens ---------- */
 
 :root {
-  font-family:
-    "Plus Jakarta Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  color-scheme: light;
+
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #faf9f7;
+  --border: #e7e4de;
+  --border-strong: #d6d2ca;
+  --ink: #1b1a17;
+  --ink-2: #5c5a54;
+  --ink-3: #8d8a82;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef0ff;
+  --on-accent: #ffffff;
+
+  --danger: #d92d20;
+  --danger-hover: #b42318;
+  --danger-soft: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  --on-danger: #ffffff;
+
+  --speaking: #e8563a;
+  --writing: #7c4ddb;
+  --reading: #0e9f8e;
+  --listening: #d98a0b;
+  /* Ink drawn on top of a filled module colour (the check in a covered card). */
+  --on-module: #ffffff;
+
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+
+  --shadow-lg: 0 4px 8px rgb(27 26 23 / 0.06), 0 24px 48px -12px rgb(27 26 23 / 0.24);
+
+  --header-bg: rgb(255 255 255 / 0.78);
+  --overlay: rgb(27 26 23 / 0.32);
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --fast: 140ms;
+
+  --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f1014;
+  --surface: #17181d;
+  --surface-2: #1d1f25;
+  --border: #2a2c34;
+  --border-strong: #3a3d47;
+  --ink: #f2f1ee;
+  --ink-2: #a5a4a0;
+  --ink-3: #747378;
+
+  --accent: #8b8cff;
+  --accent-hover: #a5a6ff;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  --on-accent: #0f1014;
+
+  --danger: #f97066;
+  --danger-hover: #fb8c84;
+  --on-danger: #0f1014;
+
+  --speaking: #ff7a5c;
+  --writing: #a98bff;
+  --reading: #2cc5b1;
+  --listening: #f2b134;
+  --on-module: #0f1014;
+
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.6);
+
+  --header-bg: rgb(23 24 29 / 0.78);
+  --overlay: rgb(5 6 8 / 0.6);
+}
+
+/* Any element (or ancestor) carrying data-module gets that module's colour and tint. */
+[data-module="speaking"] {
+  --module-color: var(--speaking);
+}
+[data-module="writing"] {
+  --module-color: var(--writing);
+}
+[data-module="reading"] {
+  --module-color: var(--reading);
+}
+[data-module="listening"] {
+  --module-color: var(--listening);
+}
+:root:not([data-theme="dark"]) [data-module="listening"] {
+  /* Amber is too light for a white check. */
+  --on-module: #1b1a17;
+}
+[data-module] {
+  --module-soft: color-mix(in srgb, var(--module-color) 12%, var(--surface));
+}
+
+/* ---------- Reset and base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Keeps scrolled-to content clear of the sticky header. */
+  scroll-padding-top: 80px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
   line-height: 1.5;
-  font-weight: 400;
-  color: #111318;
-  background-color: #fcfcfc;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-:root {
-  --ink-900: #0a0b0d;
-  --ink-800: #17191e;
-  --ink-700: #292c34;
-  --ink-600: #424652;
-  --ink-500: #626875;
-  --ink-400: #888e9d;
-  --ink-inverse: #ffffff;
-  --accent: #111318;
-  --success: #1b6d3c;
-  --warning: #c57c1b;
-  --danger: #c0352b;
-  --signature: #d77b3e;
-
-  /* Minimal Line Surface & Border Variables */
-  --surface-strong: #ffffff;
-  --surface: #ffffff;
-  --surface-soft: #f8f9fa;
-  --surface-soft-2: #f4f5f7;
-  --surface-muted: #f1f3f5;
-  --surface-muted-2: #eeeeee;
-  --surface-muted-3: #e8eaed;
-  --surface-muted-4: #f8f9fa;
-  --surface-glass: #ffffff;
-  --table-head: #f5f5f7;
-  --table-foot: #eeeef0;
-
-  /* Line-focused Crisp Borders */
-  --border: rgba(0, 0, 0, 0.12);
-  --border-strong: rgba(0, 0, 0, 0.22);
-  --border-stronger: rgba(0, 0, 0, 0.38);
-
-  --success-border: rgba(27, 109, 60, 0.4);
-  --success-surface: rgba(27, 109, 60, 0.05);
-  --selected-border: rgba(0, 0, 0, 0.85);
-  --selected-surface: rgba(0, 0, 0, 0.03);
-
-  --progress-ring: #111318;
-  --primary-gradient: none;
-  --primary-text: #ffffff;
-  --page-bg: #fcfcfc;
-  --page-glow: none;
-
-  --weightage-speaking-bg: rgba(200, 133, 67, 0.05);
-  --weightage-speaking-border: #c88543;
-  --weightage-writing-bg: rgba(108, 123, 184, 0.05);
-  --weightage-writing-border: #6c7bb8;
-  --weightage-reading-bg: rgba(110, 169, 91, 0.05);
-  --weightage-reading-border: #6ea95b;
-  --weightage-listening-bg: rgba(192, 106, 118, 0.05);
-  --weightage-listening-border: #c06a76;
-  --weightage-row-speaking: rgba(200, 133, 67, 0.15);
-  --weightage-row-writing: rgba(108, 123, 184, 0.15);
-  --weightage-row-reading: rgba(110, 169, 91, 0.15);
-  --weightage-row-listening: rgba(192, 106, 118, 0.15);
-  --weightage-total-bg: rgba(0, 0, 0, 0.04);
-
-  /* Shadows removed for linear aesthetic */
-  --shadow-soft: none;
-  --shadow-deep: none;
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --ink-900: #f4f5f8;
-  --ink-800: #e1e3e9;
-  --ink-700: #c6cad5;
-  --ink-600: #a2a7b6;
-  --ink-500: #808696;
-  --ink-400: #616776;
-  --ink-inverse: #090a0c;
-  --accent: #f4f5f8;
-  --success: #4fc37a;
-  --warning: #e0a44c;
-  --danger: #e57a73;
-  --signature: #f2a261;
-
-  --surface-strong: #0e1014;
-  --surface: #0e1014;
-  --surface-soft: #14171d;
-  --surface-soft-2: #181c24;
-  --surface-muted: #1c202a;
-  --surface-muted-2: #222733;
-  --surface-muted-3: #262c39;
-  --surface-muted-4: #14171d;
-  --surface-glass: #0e1014;
-  --table-head: #14171d;
-  --table-foot: #181c24;
-
-  /* Line-focused Crisp Dark Borders */
-  --border: rgba(255, 255, 255, 0.14);
-  --border-strong: rgba(255, 255, 255, 0.28);
-  --border-stronger: rgba(255, 255, 255, 0.45);
-
-  --success-border: rgba(79, 195, 122, 0.4);
-  --success-surface: rgba(79, 195, 122, 0.08);
-  --selected-border: rgba(255, 255, 255, 0.85);
-  --selected-surface: rgba(255, 255, 255, 0.05);
-
-  --progress-ring: #f4f5f8;
-  --primary-gradient: none;
-  --primary-text: #090a0c;
-  --page-bg: #090a0c;
-  --page-glow: none;
-
-  --weightage-speaking-bg: rgba(200, 133, 67, 0.1);
-  --weightage-speaking-border: #c88543;
-  --weightage-writing-bg: rgba(108, 123, 184, 0.1);
-  --weightage-writing-border: #6c7bb8;
-  --weightage-reading-bg: rgba(110, 169, 91, 0.1);
-  --weightage-reading-border: #6ea95b;
-  --weightage-listening-bg: rgba(192, 106, 118, 0.1);
-  --weightage-listening-border: #c06a76;
-  --weightage-row-speaking: rgba(200, 133, 67, 0.2);
-  --weightage-row-writing: rgba(108, 123, 184, 0.2);
-  --weightage-row-reading: rgba(110, 169, 91, 0.2);
-  --weightage-row-listening: rgba(192, 106, 118, 0.2);
-  --weightage-total-bg: rgba(255, 255, 255, 0.06);
-
-  --shadow-soft: none;
-  --shadow-deep: none;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd {
   margin: 0;
-  min-height: 100vh;
-  background: var(--page-bg);
-  color: var(--ink-900);
 }
 
-#root {
-  min-height: 100vh;
+ol,
+ul {
+  padding: 0;
+  list-style: none;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 button,
 input,
 select,
 textarea {
-  font-family: inherit;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

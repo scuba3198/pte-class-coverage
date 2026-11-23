@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { parseState } from "../state";
 import type { AppState } from "../types";
+import { Icon } from "./Icon";
 
 const downloadJson = (data: unknown, filename: string) => {
   const url = URL.createObjectURL(
@@ -39,32 +40,39 @@ export const BackupCard = ({ state, filename, onImport }: BackupCardProps) => {
   };
 
   return (
-    <div className="card backup-card">
-      <div className="card-header">
-        <div>
-          <p className="section-label">Backup</p>
-          <h2>Export or restore</h2>
-          <p className="card-subtitle">Download a JSON backup or import one to restore.</p>
+    <details className="accordion-row">
+      <summary>
+        <span className="accordion-text">
+          <span className="accordion-title">Backup</span>
+          <span className="accordion-desc">Export or import a copy of your data</span>
+        </span>
+        <Icon name="chevron" size={20} />
+      </summary>
+      <div className="accordion-body">
+        <p className="body-text">
+          Data lives in this browser. Export a copy before clearing storage or switching devices.
+        </p>
+        <div className="backup-actions">
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => downloadJson(state, filename)}
+          >
+            <Icon name="download" size={16} />
+            Export data
+          </button>
+          <label className="button secondary file-button">
+            <Icon name="upload" size={16} />
+            Import backup
+            <input type="file" accept="application/json" onChange={handleImport} />
+          </label>
         </div>
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
-      <div className="backup-actions">
-        <button
-          className="primary-button"
-          type="button"
-          onClick={() => downloadJson(state, filename)}
-        >
-          Export data
-        </button>
-        <label className="ghost-button file-button">
-          Import backup
-          <input type="file" accept="application/json" onChange={handleImport} />
-        </label>
-      </div>
-      {error && <p className="auth-message error">{error}</p>}
-      <p className="backup-note">
-        Data is stored locally in this browser. Export a backup if you plan to clear browser
-        storage.
-      </p>
-    </div>
+    </details>
   );
 };

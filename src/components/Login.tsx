@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "../supabase";
+import { Logomark } from "./Icon";
 
 export const Login = ({ onContinueAsGuest }: { onContinueAsGuest: () => void }) => {
   const [email, setEmail] = useState("");
@@ -21,42 +22,52 @@ export const Login = ({ onContinueAsGuest }: { onContinueAsGuest: () => void }) 
   };
 
   return (
-    <div className="login-screen">
+    <main className="login-screen">
       <div className="login-card">
         <div className="login-header">
-          <h2>PTE Tracker Login</h2>
-          <p>Sign in with your Essay Architect credentials</p>
+          <Logomark size={48} />
+          <p className="eyebrow">PTE Class Coverage</p>
+          <h1>PTE Tracker Login</h1>
+          <p className="caption">Sign in with your Essay Architect credentials</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+          <label className="field" htmlFor="email">
+            <span className="field-label">Email</span>
             <input
               id="email"
+              className="control"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="teacher@example.com"
               required
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          </label>
+          <label className="field" htmlFor="password">
+            <span className="field-label">Password</span>
             <input
               id="password"
+              className="control"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
             />
-          </div>
-          {error && <div className="login-error">{error}</div>}
-          {!supabase && (
-            <div className="login-error">
-              Cloud Sync is currently unavailable. Please use Guest Mode.
-            </div>
+          </label>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
           )}
-          <button type="submit" className="login-button" disabled={loading || !supabase}>
+          {!supabase && (
+            <p className="form-notice">
+              Cloud Sync is currently unavailable. Please use Guest Mode.
+            </p>
+          )}
+          <button type="submit" className="button primary block" disabled={loading || !supabase}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
@@ -66,17 +77,18 @@ export const Login = ({ onContinueAsGuest }: { onContinueAsGuest: () => void }) 
 
           <button
             type="button"
-            className="guest-button"
+            className="button secondary block"
             onClick={onContinueAsGuest}
             disabled={loading}
           >
             Continue as Guest
           </button>
         </form>
-        <div className="login-footer">
-          <p>Data will be synced to your secure cloud profile if you sign in.</p>
-        </div>
+        <p className="login-footer caption">
+          Signing in syncs your data to your secure cloud profile. Guest mode keeps it in this
+          browser.
+        </p>
       </div>
-    </div>
+    </main>
   );
 };
