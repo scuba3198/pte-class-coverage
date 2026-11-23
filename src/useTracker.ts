@@ -38,8 +38,11 @@ export const useTracker = () => {
 
   useEffect(() => {
     if (!supabase) return;
-    const setSessionUser = (next: User | null) =>
+    const setSessionUser = (next: User | null) => {
       setUser((prev) => (prev?.id === next?.id ? prev : next));
+      // Signing in (even from another tab) ends guest mode, so a later sign-out shows the login screen.
+      if (next) setIsGuest(false);
+    };
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) =>
       setSessionUser(session?.user ?? null),
