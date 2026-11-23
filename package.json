@@ -5,36 +5,25 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
-    "lint": "oxlint . --deny-warnings",
-    "format": "prettier . --write --plugin=@prettier/plugin-oxc",
-    "type-check": "tsc -p tsconfig.app.json --noEmit",
-    "test:architecture": "dependency-cruiser src --include-only \"^src\" --config .dependency-cruiser.json",
+    "build": "tsc && vite build",
+    "type-check": "tsc",
     "test": "vitest run",
-    "check": "run-s format lint type-check test test:architecture"
+    "check": "tsc && vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
-    "effect": "^3.21.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@prettier/plugin-oxc": "^0.1.0",
     "@testing-library/react": "^16.3.1",
-    "@tsconfig/strictest": "^2.0.5",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "dependency-cruiser": "^16.10.0",
-    "fast-check": "^4.8.0",
     "jsdom": "^27.4.0",
-    "npm-run-all2": "^7.0.2",
-    "oxlint": "^0.15.11",
     "prettier": "^3.5.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",
-    "vite-plugin-checker": "^0.9.0",
     "vitest": "^3.0.5"
   }
 }

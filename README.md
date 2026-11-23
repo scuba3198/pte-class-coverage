@@ -1,8 +1,6 @@
 # PTE Class Coverage Tracker
 
-A type-safe React application for tracking PTE exam preparation class coverage and sessions.
-
-Built with layered architecture and Effect Schema validation for safer data handling at application boundaries.
+A small React app for tracking PTE exam preparation class coverage and sessions.
 
 ---
 
@@ -15,69 +13,31 @@ Built with layered architecture and Effect Schema validation for safer data hand
 
 ---
 
-## Architectural Principles
+## How it works
 
-This codebase enforces strict software safety systems using **Effect-TS**:
-
-- **Runtime Boundary Validation**: Effect Schema validates imported, local, and cloud state before it enters the app.
-- **Nominal & Branded Types**: Strongly differentiates distinct database IDs (e.g. `ClassId`, `ModuleId`, `SessionId`) using `@effect/schema` branding to prevent accidental cross-assignment.
-- **Strict Boundary Validation**: Evaluates external data at boundaries (network requests, imports, and localStorage) using schemas that reject invalid state before it enters the application.
-- **Algebraic Data Errors**: Custom errors inherit from `Data.TaggedError`, facilitating compile-time checks and pattern matching on failure cases.
-- **State Immutability**: Application use cases return updated state instead of mutating the existing state in place.
-- **Property-Based Testing (`fast-check`)**: Selected normalization and state-merging properties are checked against randomized inputs.
-
----
-
-## Architecture Diagram
-
-The project uses clean unidirectional flow logic:
-
-```mermaid
-graph TD
-    subgraph Presentation["Presentation Layer (React)"]
-        UI[Components & Pages]
-        Context[AppContext & Hooks]
-    end
-
-    subgraph Application["Application Layer (Use Cases)"]
-        UC[Use Cases]
-    end
-
-    subgraph Domain["Domain Layer (Business Logic)"]
-        Models[Schemas & Brands]
-        Logic[Pure FSM & Normalization]
-        Data[Static Data]
-    end
-
-    subgraph Infrastructure["Infrastructure Layer (External)"]
-        Storage[Storage Services]
-        Supabase[Supabase API]
-        Local[LocalStorage]
-        Log[Logger Service]
-    end
-
-    Presentation --> Application
-    Application --> Domain
-    Application --> Infrastructure
-    Infrastructure --> Domain
-```
+- `src/state.ts` — the tracker state and every change to it, as plain functions (toggle coverage, log a session, add/remove/reset a class, merge a backup). Stored or imported data is repaired by `normalizeState` before it is used.
+- `src/coverage.ts`, `src/data.ts` — the weightage chart and which question types count towards 72 marks per skill.
+- `src/useTracker.ts` — loads and auto-saves the state (cloud when signed in, `localStorage` as a guest). Changes are only saved after a successful load, and saves run one at a time, in order.
+- `src/storage.ts`, `src/supabase.ts` — the two places the state can live.
+- `src/App.tsx`, `src/components/` — the UI.
 
 ---
 
 ## Tech Stack
 
 - **Framework**: React 19 + Vite
-- **Effect Library**: Effect-TS Schema/Either utilities
 - **Backend & Auth**: Supabase
-- **Styling**: Vanilla CSS (Premium Aesthetics, Dark Mode support)
-- **Testing**: Vitest + React Testing Library + fast-check
+- **Styling**: Vanilla CSS (Dark Mode support)
+- **Testing**: Vitest + React Testing Library
 
 ---
 
 ## Setup & Configuration
 
 ### Environment Variables
+
 Create a `.env` file in the root directory:
+
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -88,7 +48,9 @@ For a fresh database, follow [Database setup](supabase/README.md). The migration
 upsert only their own state. Guest mode works without Supabase configuration.
 
 ### GitHub Actions Deployment
+
 For production builds (e.g. GitHub Pages), configure the secrets in your repository settings:
+
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
@@ -96,15 +58,10 @@ For production builds (e.g. GitHub Pages), configure the secrets in your reposit
 
 ## Scripts
 
-Use the following npm scripts for development and verification:
-
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Starts the Vite development server |
-| `npm run build` | Compiles TypeScript and builds the bundle |
-| `npm run lint` | Runs `oxlint` with `--deny-warnings` |
-| `npm run format` | Formats all code with Prettier |
-| `npm run type-check` | Performs strict TypeScript checks |
-| `npm run test` | Runs the test suite |
-| `npm run test:architecture` | Verifies clean architecture layers with `dependency-cruiser` |
-| `npm run check` | Executes formatting, lint, type-checking, tests, and architecture constraints |
+| Command              | Description                         |
+| -------------------- | ----------------------------------- |
+| `npm run dev`        | Starts the Vite development server  |
+| `npm run build`      | Type-checks and builds the bundle   |
+| `npm run type-check` | Strict TypeScript check             |
+| `npm test`           | Runs the test suite                 |
+| `npm run check`      | Type-check and tests (what CI runs) |
