@@ -200,3 +200,23 @@ describe("mergeBackup", () => {
     expect(merged.sessions["a"]!.map((s) => s.id)).toEqual(["s1", "s2"]);
   });
 });
+
+describe("importing a backup", () => {
+  it("restores ticks into a fresh state and never unticks local ones", () => {
+    const withTick = toggleCoverage(buildDefaultState(), "class-7-8", "read-aloud");
+
+    const restored = mergeBackup(buildDefaultState(), withTick);
+    expect(restored.coverage["class-7-8"]!["read-aloud"]).toBe(true);
+
+    const kept = mergeBackup(withTick, buildDefaultState());
+    expect(kept.coverage["class-7-8"]!["read-aloud"]).toBe(true);
+  });
+});
+
+describe("today", () => {
+  it("is the local date, not the UTC date", () => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    expect(today()).toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
+  });
+});
