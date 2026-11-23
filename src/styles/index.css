@@ -35,8 +35,6 @@
   --radius-control: 10px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgb(27 26 23 / 0.04), 0 1px 3px rgb(27 26 23 / 0.05);
-  --shadow-md: 0 1px 2px rgb(27 26 23 / 0.04), 0 6px 16px -4px rgb(27 26 23 / 0.08);
   --shadow-lg: 0 4px 8px rgb(27 26 23 / 0.06), 0 24px 48px -12px rgb(27 26 23 / 0.24);
 
   --header-bg: rgb(255 255 255 / 0.78);
@@ -75,8 +73,6 @@
   --listening: #f2b134;
   --on-module: #0f1014;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 20px -6px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.6);
 
   --header-bg: rgb(23 24 29 / 0.78);
