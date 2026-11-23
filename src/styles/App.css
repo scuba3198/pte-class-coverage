@@ -696,11 +696,21 @@
 }
 
 .question-row[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--module-color) 6%, transparent);
+  background: color-mix(in srgb, var(--module-color) 8%, transparent);
+  box-shadow: inset 3px 0 0 var(--module-color);
 }
 
 .question-row[aria-pressed="true"]:hover {
-  background: color-mix(in srgb, var(--module-color) 11%, transparent);
+  background: color-mix(in srgb, var(--module-color) 13%, transparent);
+}
+
+/* On the light page background the tint needs more body to read as "done". */
+:root:not([data-theme="dark"]) .question-row[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--module-color) 17%, transparent);
+}
+
+:root:not([data-theme="dark"]) .question-row[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--module-color) 23%, transparent);
 }
 
 .status-circle {
@@ -774,9 +784,13 @@
 }
 
 .session-chip[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--module-color) 10%, transparent);
-  border-color: color-mix(in srgb, var(--module-color) 55%, transparent);
+  background: color-mix(in srgb, var(--module-color) 14%, transparent);
+  border-color: var(--module-color);
   color: var(--ink);
+}
+
+:root:not([data-theme="dark"]) .session-chip[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--module-color) 22%, transparent);
 }
 
 .session-chip[aria-pressed="true"] .icon {
