@@ -42,6 +42,45 @@
   border-top: 1px solid var(--border);
 }
 
+.collapsible > summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible > summary:focus-visible {
+  outline-offset: 4px;
+}
+
+.collapsible > summary > .icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ink-3);
+  transition:
+    transform 180ms var(--ease),
+    color var(--fast) var(--ease);
+}
+
+.collapsible > summary:hover > .icon {
+  color: var(--ink);
+}
+
+.collapsible[open] > summary > .icon {
+  transform: rotate(180deg);
+}
+
+/* Collapsed, the heading stands alone with no gap below it. */
+.collapsible:not([open]) .section-head {
+  margin-bottom: 0;
+}
+
 .reference {
   margin-top: 64px;
   padding-top: 48px;
