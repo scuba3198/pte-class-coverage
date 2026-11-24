@@ -1,6 +1,6 @@
 import { allQuestionTypeIds } from "./coverage";
 import { classDefaults, modules } from "./data";
-import type { AppState, ClassItem, ModuleId, Session } from "./types";
+import type { AppState, ClassItem, Institute, ModuleId, Session, Workspace } from "./types";
 
 const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 
@@ -13,7 +13,7 @@ export const today = (): string => {
 const blankCoverage = (): Record<string, boolean> =>
   Object.fromEntries(allQuestionTypeIds.map((id) => [id, false]));
 
-export const buildDefaultState = (): AppState => ({
+export const buildDefaultWorkspace = (): Workspace => ({
   classes: classDefaults.map((c) => ({ ...c })),
   coverage: Object.fromEntries(classDefaults.map((c) => [c.id, blankCoverage()])),
   sessions: Object.fromEntries(classDefaults.map((c) => [c.id, []])),
@@ -63,12 +63,16 @@ const normalizeSession = (raw: unknown): Session | null => {
   };
 };
 
-/** Repairs stored or imported data into a complete, well-formed state. */
-export const normalizeState = (raw: unknown): AppState => {
+/** Repairs stored or imported data into a complete, well-formed workspace. */
+const normalizeWorkspace = (raw: unknown): Workspace => {
   const source = isRecord(raw) ? raw : {};
   const sourceCoverage = isRecord(source.coverage) ? source.coverage : {};
   const sourceSessions = isRecord(source.sessions) ? source.sessions : {};
-  const state: AppState = { classes: normalizeClasses(source.classes), coverage: {}, sessions: {} };
+  const state: Workspace = {
+    classes: normalizeClasses(source.classes),
+    coverage: {},
+    sessions: {},
+  };
 
   for (const { id } of state.classes) {
     const saved = sourceCoverage[id];
@@ -86,26 +90,13 @@ export const normalizeState = (raw: unknown): AppState => {
   return state;
 };
 
-/** Like normalizeState, but rejects data that is clearly not a tracker state. */
-export const parseState = (raw: unknown): AppState => {
-  if (
-    !isRecord(raw) ||
-    !Array.isArray(raw.classes) ||
-    !isRecord(raw.coverage) ||
-    !isRecord(raw.sessions)
-  ) {
-    throw new Error("Invalid backup file format");
-  }
-  return normalizeState(raw);
-};
-
-/** Merges an imported backup into the current state; nothing in the current state is lost. */
-export const mergeBackup = (current: AppState, backup: AppState): AppState => {
+/** Merges two workspaces; nothing in `current` is lost, and `current` wins on names. */
+const mergeWorkspaces = (current: Workspace, backup: Workspace): Workspace => {
   const byId = new Map(current.classes.map((c) => [c.id, c]));
   for (const c of backup.classes) if (!byId.has(c.id)) byId.set(c.id, c);
   const classes = [...byId.values()];
 
-  const merged: AppState = { classes, coverage: {}, sessions: {} };
+  const merged: Workspace = { classes, coverage: {}, sessions: {} };
   for (const { id } of classes) {
     merged.coverage[id] = Object.fromEntries(
       allQuestionTypeIds.map((typeId) => [
@@ -122,7 +113,7 @@ export const mergeBackup = (current: AppState, backup: AppState): AppState => {
   return merged;
 };
 
-export const toggleCoverage = (state: AppState, classId: string, typeId: string): AppState => {
+export const toggleCoverage = (state: Workspace, classId: string, typeId: string): Workspace => {
   const covered = state.coverage[classId] ?? {};
   return {
     ...state,
@@ -135,13 +126,13 @@ export const toggleCoverage = (state: AppState, classId: string, typeId: string)
  * the session as needed. Adding can also mark the question type covered.
  */
 export const toggleSessionItem = (
-  state: AppState,
+  state: Workspace,
   classId: string,
   date: string,
   moduleId: ModuleId,
   typeId: string,
   alsoCover: boolean,
-): AppState => {
+): Workspace => {
   const sessions = state.sessions[classId] ?? [];
   const existing = sessions.find((s) => s.date === date && s.moduleId === moduleId);
   const selected = existing?.questionTypeIds ?? [];
@@ -176,7 +167,7 @@ export const toggleSessionItem = (
     : result;
 };
 
-export const deleteSession = (state: AppState, classId: string, sessionId: string): AppState => ({
+export const deleteSession = (state: Workspace, classId: string, sessionId: string): Workspace => ({
   ...state,
   sessions: {
     ...state.sessions,
@@ -195,7 +186,7 @@ const compareClasses = (a: ClassItem, b: ClassItem) => {
   return a.name.localeCompare(b.name);
 };
 
-export const addClass = (state: AppState, rawName: string): AppState => {
+export const addClass = (state: Workspace, rawName: string): Workspace => {
   const name = rawName.trim();
   if (!name) return state;
 
@@ -213,15 +204,131 @@ export const addClass = (state: AppState, rawName: string): AppState => {
 };
 
 /** The last remaining class cannot be removed. */
-export const removeClass = (state: AppState, classId: string): AppState => {
+export const removeClass = (state: Workspace, classId: string): Workspace => {
   if (state.classes.length <= 1) return state;
   const { [classId]: _coverage, ...coverage } = state.coverage;
   const { [classId]: _sessions, ...sessions } = state.sessions;
   return { classes: state.classes.filter((c) => c.id !== classId), coverage, sessions };
 };
 
-export const resetClass = (state: AppState, classId: string): AppState => ({
+export const resetClass = (state: Workspace, classId: string): Workspace => ({
   ...state,
   coverage: { ...state.coverage, [classId]: blankCoverage() },
   sessions: { ...state.sessions, [classId]: [] },
 });
+
+// ---------- Institutes: each one owns its own classes, coverage and sessions ----------
+
+export const DEFAULT_INSTITUTE_ID = "institute-default";
+
+export const buildDefaultState = (): AppState => ({
+  institutes: [{ id: DEFAULT_INSTITUTE_ID, name: "My Institute" }],
+  workspaces: { [DEFAULT_INSTITUTE_ID]: buildDefaultWorkspace() },
+});
+
+const isLegacyShape = (raw: Record<string, unknown>) =>
+  Array.isArray(raw.classes) && isRecord(raw.coverage) && isRecord(raw.sessions);
+
+/**
+ * Repairs stored or imported data into a complete, well-formed state. Data saved before
+ * institutes existed (one flat set of classes) becomes the default institute.
+ */
+export const normalizeState = (raw: unknown): AppState => {
+  const source = isRecord(raw) ? raw : {};
+  if (!Array.isArray(source.institutes)) {
+    return {
+      institutes: buildDefaultState().institutes,
+      workspaces: { [DEFAULT_INSTITUTE_ID]: normalizeWorkspace(source) },
+    };
+  }
+
+  const sourceWorkspaces = isRecord(source.workspaces) ? source.workspaces : {};
+  const institutes: Institute[] = [];
+  for (const item of source.institutes) {
+    if (!isRecord(item) || typeof item.id !== "string" || !item.id) continue;
+    if (institutes.some((i) => i.id === item.id)) continue;
+    const name = typeof item.name === "string" ? item.name.trim() : "";
+    if (name) institutes.push({ id: item.id, name });
+  }
+  if (!institutes.length) return buildDefaultState();
+
+  return {
+    institutes,
+    workspaces: Object.fromEntries(
+      institutes.map(({ id }) => [id, normalizeWorkspace(sourceWorkspaces[id])]),
+    ),
+  };
+};
+
+/** Like normalizeState, but rejects data that is clearly not a tracker state. */
+export const parseState = (raw: unknown): AppState => {
+  const valid =
+    isRecord(raw) &&
+    (isLegacyShape(raw) || (Array.isArray(raw.institutes) && isRecord(raw.workspaces)));
+  if (!valid) throw new Error("Invalid backup file format");
+  return normalizeState(raw);
+};
+
+/** Merges `backup` into `current`: nothing in `current` is lost, and `current` wins on names. */
+export const mergeStates = (current: AppState, backup: AppState): AppState => {
+  const institutes = new Map(current.institutes.map((i) => [i.id, i]));
+  for (const i of backup.institutes) if (!institutes.has(i.id)) institutes.set(i.id, i);
+
+  const workspaces: Record<string, Workspace> = {};
+  for (const id of institutes.keys()) {
+    const [mine, theirs] = [current.workspaces[id], backup.workspaces[id]];
+    workspaces[id] = mine && theirs ? mergeWorkspaces(mine, theirs) : (mine ?? theirs!);
+  }
+  return { institutes: [...institutes.values()], workspaces };
+};
+
+export const newInstituteId = () => newId("institute");
+
+export const addInstitute = (state: AppState, rawName: string, id: string): AppState => {
+  const name = rawName.trim();
+  if (!name) return state;
+  return {
+    institutes: [...state.institutes, { id, name }],
+    workspaces: { ...state.workspaces, [id]: buildDefaultWorkspace() },
+  };
+};
+
+/** The last remaining institute cannot be removed. */
+export const removeInstitute = (state: AppState, id: string): AppState => {
+  if (state.institutes.length <= 1) return state;
+  const { [id]: _workspace, ...workspaces } = state.workspaces;
+  return { institutes: state.institutes.filter((i) => i.id !== id), workspaces };
+};
+
+/** Applies a class-level change to one institute's workspace. */
+export const editWorkspace = (
+  state: AppState,
+  instituteId: string,
+  edit: (workspace: Workspace) => Workspace,
+): AppState => {
+  const workspace = state.workspaces[instituteId];
+  if (!workspace) return state;
+  return { ...state, workspaces: { ...state.workspaces, [instituteId]: edit(workspace) } };
+};
+
+// ---------- Comparing and describing states (for the sign-in sync choice) ----------
+
+/** States are always normalized, so equal content serializes identically. */
+export const sameState = (a: AppState, b: AppState) => JSON.stringify(a) === JSON.stringify(b);
+
+export const isPristine = (state: AppState) => sameState(state, buildDefaultState());
+
+export const summarizeState = (state: AppState) => {
+  const workspaces = Object.values(state.workspaces);
+  return {
+    institutes: state.institutes.length,
+    classes: workspaces.reduce((n, w) => n + w.classes.length, 0),
+    sessions: workspaces.reduce((n, w) => n + Object.values(w.sessions).flat().length, 0),
+    covered: workspaces.reduce(
+      (n, w) =>
+        n +
+        Object.values(w.coverage).reduce((m, c) => m + Object.values(c).filter(Boolean).length, 0),
+      0,
+    ),
+  };
+};

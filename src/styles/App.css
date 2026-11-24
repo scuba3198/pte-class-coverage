@@ -1269,6 +1269,23 @@
   background: var(--border);
 }
 
+.sync-sources {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.sync-source {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.sync-source-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .login-footer {
   margin-top: 20px;
   text-align: center;

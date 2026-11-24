@@ -7,7 +7,8 @@ A small React app for tracking PTE exam preparation class coverage and sessions.
 ## Key Features
 
 - **☁️ Cloud Persistence (Supabase)**: Loads a user's saved state after sign-in and automatically saves subsequent changes. Initialization stops after fatal load failures to avoid overwriting cloud data.
-- **👤 Guest Mode**: Offline-first design utilizing `localStorage` if not logged in.
+- **👤 Guest Mode**: Offline-first design utilizing `localStorage` if not logged in. Guest data and the guest choice persist across reloads until the browser's storage is cleared. On sign-in, if the guest data differs from the cloud data, you choose to merge both or overwrite this browser's copy with the cloud data.
+- **🏫 Institutes**: Add, remove and switch between institutes. Each one has its own classes, coverage and session history. Session history is collapsible.
 - **📊 Smart Priority & Weightage**: Orders question types dynamically by mark contribution (High to Low) to focus study plans.
 - **🔒 Overwrite on Login**: Overwrites local work with cloud-saved profiles upon sign-in for clean state transitions.
 
@@ -15,7 +16,7 @@ A small React app for tracking PTE exam preparation class coverage and sessions.
 
 ## How it works
 
-- `src/state.ts` — the tracker state and every change to it, as plain functions (toggle coverage, log a session, add/remove/reset a class, merge a backup). Stored or imported data is repaired by `normalizeState` before it is used.
+- `src/state.ts` — the tracker state and every change to it, as plain functions (toggle coverage, log a session, add/remove/reset a class, add/remove an institute, merge states). Data saved before institutes existed becomes the default institute. Stored or imported data is repaired by `normalizeState` before it is used.
 - `src/coverage.ts`, `src/data.ts` — the weightage chart and which question types count towards 72 marks per skill.
 - `src/useTracker.ts` — loads and auto-saves the state (cloud when signed in, `localStorage` as a guest). Changes are only saved after a successful load, and saves run one at a time, in order.
 - `src/storage.ts`, `src/supabase.ts` — the two places the state can live.

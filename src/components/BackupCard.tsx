@@ -18,11 +18,10 @@ const downloadJson = (data: unknown, filename: string) => {
 
 interface BackupCardProps {
   state: AppState;
-  filename: string;
   onImport: (backup: AppState) => void;
 }
 
-export const BackupCard = ({ state, filename, onImport }: BackupCardProps) => {
+export const BackupCard = ({ state, onImport }: BackupCardProps) => {
   const [error, setError] = useState("");
 
   const handleImport = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +43,7 @@ export const BackupCard = ({ state, filename, onImport }: BackupCardProps) => {
       <summary>
         <span className="accordion-text">
           <span className="accordion-title">Backup</span>
-          <span className="accordion-desc">Export or import a copy of your data</span>
+          <span className="accordion-desc">Export or import a copy of all your institutes</span>
         </span>
         <Icon name="chevron" size={20} />
       </summary>
@@ -56,7 +55,7 @@ export const BackupCard = ({ state, filename, onImport }: BackupCardProps) => {
           <button
             className="button primary"
             type="button"
-            onClick={() => downloadJson(state, filename)}
+            onClick={() => downloadJson(state, "pte-tracker-backup.json")}
           >
             <Icon name="download" size={16} />
             Export data

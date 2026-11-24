@@ -5,22 +5,28 @@ import { ConfirmationModal } from "./components/ConfirmationModal";
 import { CoverageCard } from "./components/CoverageCard";
 import { HelpCard } from "./components/HelpCard";
 import { Icon, Logomark } from "./components/Icon";
+import { InstituteBar } from "./components/InstituteBar";
 import { Login } from "./components/Login";
 import { ModuleTabs } from "./components/ModuleTabs";
 import { SessionCard } from "./components/SessionCard";
 import { SessionHistory } from "./components/SessionHistory";
+import { SyncChoiceScreen } from "./components/SyncChoiceScreen";
 import { WeightageTable } from "./components/WeightageTable";
 import {
   addClass,
+  addInstitute,
   deleteSession,
-  mergeBackup,
+  editWorkspace,
+  mergeStates,
+  newInstituteId,
   removeClass,
+  removeInstitute,
   resetClass,
   toggleCoverage,
   toggleSessionItem,
   today,
 } from "./state";
-import type { ModuleId } from "./types";
+import type { ModuleId, Workspace } from "./types";
 import { useTracker } from "./useTracker";
 import "./styles/App.css";
 
@@ -32,8 +38,21 @@ interface Confirmation {
 }
 
 const App = () => {
-  const { state, update, loading, user, isGuest, setIsGuest, theme, toggleTheme, logout } =
-    useTracker();
+  const {
+    state,
+    update,
+    institute,
+    selectInstitute,
+    loading,
+    syncChoice,
+    resolveSync,
+    user,
+    isGuest,
+    setIsGuest,
+    theme,
+    toggleTheme,
+    logout,
+  } = useTracker();
 
   const [classId, setClassId] = useState("");
   const [moduleId, setModuleId] = useState<ModuleId>("speaking");
@@ -50,14 +69,31 @@ const App = () => {
     );
   }
 
+  if (syncChoice) {
+    return (
+      <SyncChoiceScreen
+        email={user?.email}
+        local={syncChoice.local}
+        cloud={syncChoice.cloud}
+        onResolve={resolveSync}
+        onSignOut={logout}
+      />
+    );
+  }
+
   if (!user && !isGuest) {
     return <Login onContinueAsGuest={() => setIsGuest(true)} />;
   }
 
+  // Every class-level change applies to the active institute only.
+  const workspace = state.workspaces[institute.id]!;
+  const edit = (change: (w: Workspace) => Workspace) =>
+    update((s) => editWorkspace(s, institute.id, change));
+
   // Falls back to the first class when none is picked yet or the picked one was removed.
-  const activeClass = state.classes.find((c) => c.id === classId) ?? state.classes[0]!;
-  const covered = state.coverage[activeClass.id] ?? {};
-  const sessions = state.sessions[activeClass.id] ?? [];
+  const activeClass = workspace.classes.find((c) => c.id === classId) ?? workspace.classes[0]!;
+  const covered = workspace.coverage[activeClass.id] ?? {};
+  const sessions = workspace.sessions[activeClass.id] ?? [];
   const selected =
     sessions.find((s) => s.date === sessionDate && s.moduleId === moduleId)?.questionTypeIds ?? [];
 
@@ -117,18 +153,38 @@ const App = () => {
       </header>
 
       <main className="container main">
+        <InstituteBar
+          institutes={state.institutes}
+          activeId={institute.id}
+          onSelect={selectInstitute}
+          onAdd={(name) => {
+            const id = newInstituteId();
+            update((s) => addInstitute(s, name, id));
+            selectInstitute(id);
+          }}
+          onRemove={() =>
+            confirm({
+              title: `Remove institute ${institute.name}?`,
+              message:
+                "All classes, coverage and sessions in this institute will be permanently deleted. This cannot be undone.",
+              confirmLabel: "Remove institute",
+              onConfirm: () => update((s) => removeInstitute(s, institute.id)),
+            })
+          }
+        />
+
         <ClassBar
-          classes={state.classes}
+          classes={workspace.classes}
           activeId={activeClass.id}
           onSelect={setClassId}
-          onAdd={(name) => update((s) => addClass(s, name))}
+          onAdd={(name) => edit((w) => addClass(w, name))}
           onReset={() =>
             confirm({
               title: `Reset class ${activeClass.name}?`,
               message:
                 "This clears all coverage and session data for this class. This cannot be undone.",
               confirmLabel: "Reset class",
-              onConfirm: () => update((s) => resetClass(s, activeClass.id)),
+              onConfirm: () => edit((w) => resetClass(w, activeClass.id)),
             })
           }
           onRemove={() =>
@@ -137,7 +193,7 @@ const App = () => {
               message:
                 "All coverage and sessions for this class will be permanently deleted. This cannot be undone.",
               confirmLabel: "Remove class",
-              onConfirm: () => update((s) => removeClass(s, activeClass.id)),
+              onConfirm: () => edit((w) => removeClass(w, activeClass.id)),
             })
           }
         />
@@ -149,7 +205,7 @@ const App = () => {
             className={activeClass.name}
             moduleId={moduleId}
             covered={covered}
-            onToggle={(typeId) => update((s) => toggleCoverage(s, activeClass.id, typeId))}
+            onToggle={(typeId) => edit((w) => toggleCoverage(w, activeClass.id, typeId))}
           />
 
           <div className="sidebar">
@@ -161,15 +217,15 @@ const App = () => {
               onSetDate={setSessionDate}
               onSetAlsoCover={setAlsoCover}
               onToggle={(typeId) =>
-                update((s) =>
-                  toggleSessionItem(s, activeClass.id, sessionDate, moduleId, typeId, alsoCover),
+                edit((w) =>
+                  toggleSessionItem(w, activeClass.id, sessionDate, moduleId, typeId, alsoCover),
                 )
               }
             />
             <SessionHistory
               className={activeClass.name}
               sessions={sessions}
-              onDelete={(sessionId) => update((s) => deleteSession(s, activeClass.id, sessionId))}
+              onDelete={(sessionId) => edit((w) => deleteSession(w, activeClass.id, sessionId))}
             />
           </div>
         </div>
@@ -182,8 +238,7 @@ const App = () => {
           <div className="accordion">
             <BackupCard
               state={state}
-              filename={`${activeClass.name.replace(/[^\w.-]+/g, "_")}-pte-backup.json`}
-              onImport={(backup) => update((s) => mergeBackup(s, backup))}
+              onImport={(backup) => update((s) => mergeStates(s, backup))}
             />
             <HelpCard />
             <WeightageTable />
