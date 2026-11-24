@@ -27,10 +27,22 @@ export interface Session {
   note: string;
 }
 
-export interface AppState {
+/** The classes of one institute, with their coverage ticks and logged sessions. */
+export interface Workspace {
   classes: ClassItem[];
   coverage: Record<string, Record<string, boolean>>;
   sessions: Record<string, Session[]>;
+}
+
+export interface Institute {
+  id: string;
+  name: string;
+}
+
+/** Every institute, each with its own, independent set of classes and coverage. */
+export interface AppState {
+  institutes: Institute[];
+  workspaces: Record<string, Workspace>;
 }
 
 /** One row of the score-weightage chart. `module` is the question type's home module. */
