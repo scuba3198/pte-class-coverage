@@ -52,9 +52,13 @@ export const SessionHistory = ({ className, sessions, onDelete }: SessionHistory
             {[...sessions]
               .sort((a, b) => b.date.localeCompare(a.date))
               .map((session) => {
-                const names = session.questionTypeIds
-                  .flatMap((id) => getQuestionTypeName(id) ?? [])
-                  .sort((a, b) => a.localeCompare(b));
+                // Tags are identified by id: two question types can share a name.
+                const tags = [...new Set(session.questionTypeIds)]
+                  .flatMap((id) => {
+                    const name = getQuestionTypeName(id);
+                    return name ? [{ id, name }] : [];
+                  })
+                  .sort((a, b) => a.name.localeCompare(b.name));
                 return (
                   <li key={session.id} className="session-item" data-module={session.moduleId}>
                     <span className="dot" aria-hidden="true" />
@@ -63,11 +67,11 @@ export const SessionHistory = ({ className, sessions, onDelete }: SessionHistory
                         <span className="session-date">{formatDate(session.date)}</span>
                         <span className="session-module">{getModule(session.moduleId).name}</span>
                       </p>
-                      {names.length ? (
+                      {tags.length ? (
                         <ul className="session-tags">
-                          {names.map((n) => (
-                            <li key={n} className="tag">
-                              {n}
+                          {tags.map(({ id, name }) => (
+                            <li key={id} className="tag">
+                              {name}
                             </li>
                           ))}
                         </ul>
