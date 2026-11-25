@@ -3,7 +3,7 @@ import type { SyncResolution } from "../useTracker";
 import type { AppState } from "../types";
 import { Logomark } from "./Icon";
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 
 const Summary = ({ title, state }: { title: string; state: AppState }) => {
   const s = summarizeState(state);
@@ -11,7 +11,7 @@ const Summary = ({ title, state }: { title: string; state: AppState }) => {
     <div className="sync-source">
       <p className="sync-source-title">{title}</p>
       <p className="caption">
-        {plural(s.institutes, "institute")}, {plural(s.classes, "class")},{" "}
+        {plural(s.institutes, "institute")}, {plural(s.classes, "class", "classes")},{" "}
         {plural(s.sessions, "session")}, {s.covered} covered
       </p>
     </div>
