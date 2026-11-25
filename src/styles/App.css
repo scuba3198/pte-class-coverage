@@ -461,22 +461,13 @@
   outline-offset: 2px;
 }
 
-.form-error,
-.form-notice {
+.form-error {
   padding: 10px 12px;
   border-radius: var(--radius-control);
   font-size: 13px;
   font-weight: 500;
-}
-
-.form-error {
   background: var(--danger-soft);
   color: var(--danger);
-}
-
-.form-notice {
-  background: color-mix(in srgb, var(--ink) 5%, transparent);
-  color: var(--ink-2);
 }
 
 /* ---------- Class bar ---------- */
@@ -1253,22 +1244,6 @@
   margin-top: 28px;
 }
 
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--ink-2);
-  font-size: 12px;
-}
-
-.login-divider::before,
-.login-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
 .sync-sources {
   display: grid;
   gap: 8px;
@@ -1286,9 +1261,220 @@
   font-weight: 600;
 }
 
-.login-footer {
-  margin-top: 20px;
+/* ---------- Sign in ---------- */
+
+/* Always dark, whatever the app theme. */
+.signin {
+  --signin-bg: #0f0e10;
+  --horizon: 31%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 24px 24px max(40px, env(safe-area-inset-bottom));
+  background: var(--signin-bg);
+  color: #fff;
+  color-scheme: dark;
+}
+
+/* The global highlight follows the app theme, which would hide white text here. */
+.signin ::selection {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.signin-sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 15% at 62% var(--horizon), rgb(150 118 98 / 0.32), transparent),
+    linear-gradient(#050506 0%, #100d0d var(--horizon), var(--signin-bg) 60%);
+}
+
+/* Stars: a few repeating tiles of different sizes, so no pattern is obvious. */
+.signin-sky::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--horizon) + 4%);
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.75), transparent),
+    radial-gradient(1px 1px at 97px 113px, rgb(255 255 255 / 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 61px 7px, rgb(255 240 220 / 0.55), transparent),
+    radial-gradient(1px 1px at 149px 71px, rgb(255 255 255 / 0.55), transparent),
+    radial-gradient(1px 1px at 11px 157px, rgb(255 255 255 / 0.35), transparent),
+    radial-gradient(1px 1px at 181px 19px, rgb(255 255 255 / 0.3), transparent),
+    radial-gradient(1px 1px at 44px 29px, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1px 1px at 12px 67px, rgb(255 236 214 / 0.45), transparent),
+    radial-gradient(1px 1px at 71px 52px, rgb(255 255 255 / 0.25), transparent);
+  background-size:
+    167px 181px,
+    211px 157px,
+    263px 229px,
+    193px 139px,
+    131px 199px,
+    239px 173px,
+    89px 103px,
+    113px 127px,
+    101px 83px;
+}
+
+/* The planet: one huge circle whose lit top edge is the horizon. */
+.signin-sky::after {
+  content: "";
+  position: absolute;
+  top: var(--horizon);
+  left: 50%;
+  width: max(240vw, 960px);
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  border-top: 1px solid rgb(255 226 196 / 0.75);
+  background: radial-gradient(
+    circle at 50% 0,
+    #1a1210 0,
+    #100d0e 14%,
+    var(--signin-bg) 24%
+  );
+  box-shadow:
+    0 -2px 6px rgb(255 214 170 / 0.55),
+    0 -10px 34px rgb(190 130 90 / 0.35),
+    inset 0 14px 28px -14px rgb(255 196 145 / 0.45);
+}
+
+.signin-panel {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* The sun just clearing the horizon, with its lens streak. */
+.signin::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--horizon) + max(2.4vw, 10px));
+  left: 74%;
+  width: min(520px, 100vw);
+  height: 70px;
+  translate: -50% -50%;
+  pointer-events: none;
+  background:
+    radial-gradient(5px 5px at center, #fff 30%, rgb(255 232 205 / 0.8) 60%, transparent),
+    radial-gradient(28px 20px at center, rgb(255 214 170 / 0.55), transparent),
+    radial-gradient(50% 1px at center, rgb(255 226 196 / 0.7), transparent);
+}
+
+.signin-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: clamp(28px, 7dvh, 72px);
+}
+
+.signin-brand h1 {
+  font-size: min(26px, 6.8vw);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.signin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 999px;
+  font: 600 16px/1 var(--font);
+  cursor: pointer;
+}
+
+.pill.light {
+  background: #fff;
+  color: #101012;
+}
+
+.pill.light:hover:not(:disabled) {
+  background: #e9e9ec;
+}
+
+.pill.dim {
+  background: #222124;
+  color: #fff;
+}
+
+.pill.dim:hover:not(:disabled) {
+  background: #2d2c30;
+}
+
+.pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pill-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 20px;
+  border: 1px solid #38373c;
+  border-radius: 999px;
+  background: #19181b;
+  color: #fff;
+  font: 500 16px var(--font);
+}
+
+.pill-input::placeholder {
+  color: #9a989e;
+}
+
+.signin-link {
+  align-self: center;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: #c9c7cd;
+  font: 500 14px var(--font);
+  cursor: pointer;
+}
+
+.signin-link:hover:not(:disabled) {
+  color: #fff;
+}
+
+.signin-note,
+.signin-error {
+  margin-bottom: 4px;
   text-align: center;
+  font-size: 13px;
+  color: #b3b1b7;
+}
+
+.signin-note + .signin-actions,
+.signin-error + .signin-actions {
+  margin-top: 12px;
+}
+
+.signin-error {
+  color: #ff9d94;
+  margin-bottom: 16px;
 }
 
 /* ---------- Responsive ---------- */

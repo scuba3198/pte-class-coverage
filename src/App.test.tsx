@@ -15,11 +15,13 @@ vi.mock("./supabase", () => ({
 
 const STORAGE_KEY = "pte-tracker-state-v1";
 
+/** The sign-in screen shares the app name, so wait for something only the tracker has. */
+const findTracker = () => screen.findByRole("region", { name: "Classes" });
+
 const openAsGuest = async () => {
   render(<App />);
-  await screen.findByText("PTE Tracker Login");
-  fireEvent.click(screen.getByText("Continue as Guest"));
-  await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
+  fireEvent.click(await screen.findByRole("button", { name: "Continue as Guest" }));
+  await findTracker();
 };
 
 const INSTITUTE = "institute-default";
@@ -42,9 +44,8 @@ describe("App", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 
     render(<App />);
-    await screen.findByText("PTE Tracker Login");
-    fireEvent.click(screen.getByText("Continue as Guest"));
-    await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
+    fireEvent.click(await screen.findByRole("button", { name: "Continue as Guest" }));
+    await findTracker();
 
     const chip = screen.getByRole("button", { name: "9-10" });
     expect(chip.getAttribute("aria-pressed")).toBe("true");
@@ -130,8 +131,8 @@ describe("App", () => {
 
     cleanup();
     render(<App />);
-    await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
-    expect(screen.queryByText("PTE Tracker Login")).toBeNull();
+    await findTracker();
+    expect(screen.queryByRole("button", { name: "Continue as Guest" })).toBeNull();
     expect(ticks("class-7-8")).toBe(1);
   });
 
@@ -146,7 +147,7 @@ describe("App", () => {
 
     cleanup();
     render(<App />);
-    await screen.findByRole("heading", { level: 1, name: "PTE Class Coverage" });
+    await findTracker();
     expect(details().open).toBe(false);
   });
 });
